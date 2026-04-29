@@ -82,6 +82,9 @@ body {
   transition: opacity 1s ease;
 }
 #splash.out { opacity: 0; pointer-events: none; }
+/* After fade completes, fully remove from layout */
+#splash.out { transition: opacity 1s ease; }
+
 
 .splash-mark {
   display: flex; flex-direction: column; align-items: center; gap: 24px;
@@ -5108,8 +5111,16 @@ function eciToScene(posVel) {
 }
 
 function initGlobe(){
+  // Guard against THREE.js CDN not loaded or WebGL unavailable
+  if(typeof THREE === 'undefined') {
+    console.warn('[Römer MPL] Three.js not loaded — globe unavailable, retrying in 2s');
+    setTimeout(()=>{ if(typeof THREE !== 'undefined') initGlobe(); },2000);
+    return;
+  }
   const canvas=document.getElementById('globe-canvas');
-  const W=canvas.parentElement.clientWidth, H=canvas.parentElement.clientHeight;
+  if(!canvas){ console.warn('[Römer MPL] Globe canvas not found'); return; }
+  const W=canvas.parentElement.clientWidth||window.innerWidth;
+  const H=canvas.parentElement.clientHeight||window.innerHeight;
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled=true;
@@ -7189,21 +7200,48 @@ async function uploadToDrive() {
 /* ─── Splash ─── */
 const SPLASH_STEPS=[{id:'li0',t:0},{id:'li1',t:500},{id:'li2',t:1050},{id:'li3',t:1650},{id:'li4',t:2200},{id:'li5',t:2750}];
 async function runSplash(){
+  // Always dismiss after 12s maximum — no matter what fails below
+  const emergencyExit = setTimeout(() => {
+    const sp=document.getElementById('splash'); if(sp) sp.classList.add('out');
+    const ap=document.getElementById('app');   if(ap) ap.classList.add('live');
+    startClock(); setupKeyboard();
+  }, 12000);
+
   for(let i=0;i<SPLASH_STEPS.length;i++){
     await wait(i===0?120:SPLASH_STEPS[i].t-SPLASH_STEPS[i-1].t);
     if(i>0){const p=document.getElementById(SPLASH_STEPS[i-1].id);p.classList.remove('active');p.classList.add('done');}
     document.getElementById(SPLASH_STEPS[i].id).classList.add('active');
     document.getElementById('progress').style.width=((i+1)/SPLASH_STEPS.length*100)+'%';
   }
-  loadSheets();loadSettings();
+  loadSheets(); loadSettings();
   await wait(3600);
   document.getElementById(SPLASH_STEPS[SPLASH_STEPS.length-1].id).classList.add('done');
-  bootApp();
+
+  // bootApp calls initGlobe → THREE.js WebGLRenderer.
+  // If THREE hasn't loaded (CDN slow/blocked) or WebGL is unavailable,
+  // catch gracefully so the splash still dismisses.
+  try {
+    bootApp();
+  } catch(e) {
+    console.warn('[Römer MPL] Boot error (non-fatal):', e.message);
+    // Try a degraded boot without globe
+    try {
+      S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES;
+      S.operators=OPERATORS_DEFAULT; S.activeOperator=OPERATORS_DEFAULT[0];
+      renderSites();
+      setTimeout(applySettings,800);
+      setTimeout(renderOperatorBadge,600);
+      setTimeout(fetchLiveGDP,2000);
+      setTimeout(fetchAchillesBridge,3000);
+      readShareHash();
+    } catch(e2) { console.warn('[Römer MPL] Degraded boot also failed:', e2.message); }
+  }
+
+  clearTimeout(emergencyExit);
   await wait(200);
   document.getElementById('splash').classList.add('out');
   document.getElementById('app').classList.add('live');
-  startClock();setupKeyboard();
-  // Show kbd hint briefly on first load
+  startClock(); setupKeyboard();
   setTimeout(()=>{document.getElementById('kbd-hints').classList.add('show');setTimeout(()=>document.getElementById('kbd-hints').classList.remove('show'),4000);},1200);
 }
 
