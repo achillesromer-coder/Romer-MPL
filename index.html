@@ -57,14 +57,17 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; }
+html {
+  height: 100%; max-height: 100%;
+  overflow: hidden;           /* prevent any outer scroll */
+}
 
 body {
   font-family: var(--font-body);
   background: var(--bg0);
   color: var(--text2);
-  height: 100%; min-height: 100vh;
-  overflow: hidden;
+  height: 100%; max-height: 100vh;
+  overflow: hidden;           /* belt-and-braces — no page scroll at body level */
   user-select: none;
   font-size: 15px;
   line-height: 1.5;
@@ -198,11 +201,10 @@ body {
 .icon-btn:hover { background: var(--bg2); color: var(--text1); border-color: var(--border2); }
 
 /* MAIN LAYOUT */
-.main-content {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-  position: relative;
+.main {
+  display: flex; flex: 1;
+  overflow: hidden; position: relative;
+  min-height: 0;    /* critical: allows flex children to shrink below content size */
 }
 
 /* ═══════════════════════════════════════════
@@ -213,6 +215,7 @@ body {
   background: var(--bg1);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
+  min-height: 0;       /* required for overflow-y:auto to work in flex child */
   transform: translateX(0);
   transition: transform 0.42s cubic-bezier(0.16,1,0.3,1);
   z-index: 10;
@@ -401,21 +404,19 @@ body {
 /* ═══════════════════════════════════════════
    GLOBE / VIEWPORT
 ═══════════════════════════════════════════ */
-.globe-wrap { flex: 1; position: relative; overflow: hidden; }
-#globe-wrap {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.globe-wrap {
+  flex: 1;
+  position: relative;
   overflow: hidden;
+  min-height: 0;      /* critical flex shrink */
 }
+
+/* telebar is .flex-shrink:0 — defined below with full styles */
+
 #globe-canvas {
   display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-#globe-canvas {
-  width: 100%; height: 100%;
+  /* Three.js renderer.setSize() owns canvas.style.width/height — no CSS override here.
+     position:absolute + !important would fight setSize and produce resolution mismatch. */
   background: radial-gradient(ellipse at 38% 42%, #0a1624 0%, #040a12 55%, #020508 100%);
 }
 
@@ -2971,6 +2972,8 @@ function togglePanel() {
   S.panelCollapsed = !S.panelCollapsed;
   document.getElementById('panel').classList.toggle('collapsed', S.panelCollapsed);
   document.getElementById('panel-toggle').textContent = S.panelCollapsed ? '›' : '‹';
+  // Dispatch resize after the 420ms CSS transition so the globe re-measures its container
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 450);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -3111,7 +3114,7 @@ function initLaunchScene() {
   const sun=new THREE.DirectionalLight(0xfff0e0,2); sun.position.set(80,120,60); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); lScene.add(sun);
   lScene.add(Object.assign(new THREE.DirectionalLight(0x224466,0.5),{position:{set:()=>{}}}));
   const fill=new THREE.DirectionalLight(0x224466,0.5); fill.position.set(-60,40,-60); lScene.add(fill);
-  window.addEventListener('resize',()=>{const W2=canvas.parentElement.clientWidth,H2=canvas.parentElement.clientHeight;lRenderer.setSize(W2,H2);lCamera.aspect=W2/H2;lCamera.updateProjectionMatrix();});
+  window.addEventListener('resize',()=>{const _r=canvas.parentElement.getBoundingClientRect();const W2=_r.width>10?_r.width:window.innerWidth-300;const H2=_r.height>10?_r.height:window.innerHeight-48;lRenderer.setSize(W2,H2);lCamera.aspect=W2/H2;lCamera.updateProjectionMatrix();});
   animateLaunch();
 }
 
@@ -5115,8 +5118,14 @@ function initGlobe(){
   }
   const canvas=document.getElementById('globe-canvas');
   if(!canvas){ console.warn('[Römer MPL] Globe canvas not found'); return; }
-  const W=canvas.parentElement.clientWidth||window.innerWidth;
-  const H=canvas.parentElement.clientHeight||window.innerHeight;
+
+  // getBoundingClientRect is accurate post-layout; clientWidth/Height is 0
+  // if the parent hasn't painted yet (common on first boot).
+  // Falls back to window dimensions minus panel width + topbar.
+  const parent = canvas.parentElement;
+  let rect = parent.getBoundingClientRect();
+  const W = rect.width  > 10 ? rect.width  : window.innerWidth - 300;
+  const H = rect.height > 10 ? rect.height : window.innerHeight - 48;
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled=true;
@@ -5171,10 +5180,24 @@ function initGlobe(){
   setupMouse(canvas);
 
   window.addEventListener('resize',()=>{
-    const W2=canvas.parentElement.clientWidth,H2=canvas.parentElement.clientHeight;
+    const _r=canvas.parentElement.getBoundingClientRect();
+    const W2=_r.width>10?_r.width:window.innerWidth-300;
+    const H2=_r.height>10?_r.height:window.innerHeight-48;
     renderer.setSize(W2,H2);camera.aspect=W2/H2;camera.updateProjectionMatrix();
     if(globeDataMesh&&globeDataMesh.rotation) globeDataMesh.rotation.copy(globe.rotation);
   });
+
+  // Re-measure and resize once after a short delay to catch any layout shift
+  // that happens between script execution and first paint
+  setTimeout(()=>{
+    const _r=canvas.parentElement.getBoundingClientRect();
+    if(_r.width>10&&_r.height>10){
+      renderer.setSize(_r.width,_r.height);
+      camera.aspect=_r.width/_r.height;
+      camera.updateProjectionMatrix();
+    }
+  }, 300);
+
   setInterval(buildTerminator,60000);
 
   // Progressive texture pipeline: L1 (canvas) → L2 (TopoJSON) → L3 (HD Blue Marble)
@@ -6696,17 +6719,30 @@ function setView(v){
   document.getElementById('vbtn-orbit')?.classList.toggle('active',v==='orbit');
   const lv  = document.getElementById('launch-view');
   const ov  = document.getElementById('orbit-view');
-  if(ov) ov.style.display = v==='orbit' ? '' : 'none';
-  if(v==='orbit') { renderOrbitView(); return; }
+
+  if(v==='orbit') {
+    if(ov) ov.style.display = '';
+    // Defer render until after display:'' has taken effect and the canvas has real dimensions
+    requestAnimationFrame(() => requestAnimationFrame(() => renderOrbitView()));
+    // Also set up 5s refresh if enabled
+    return;
+  }
+
+  // Hide orbit view
+  if(ov) ov.style.display = 'none';
+
   if(v==='object'&&S.site){
     lv.style.display='flex';setTimeout(()=>lv.classList.add('show'),10);
     if(!lRenderer)initLaunchScene();
-    setTimeout(ensureCorridorOverlay,600); // BC-013: build corridor overlay if run data exists
+    setTimeout(ensureCorridorOverlay,600);
   } else {
+    // Returning to globe — dismiss launch/results overlays and ping resize
     lv.classList.remove('show');setTimeout(()=>lv.style.display='none',600);
     document.getElementById('mpl-results').classList.remove('show');
     setTimeout(()=>document.getElementById('mpl-results').style.display='none',500);
     document.getElementById('iip-globe-marker').classList.remove('show');
+    // Ping resize so globe fills the container correctly after overlay is gone
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
   }
 }
 
@@ -6728,8 +6764,9 @@ function setOrbitPlotMode(mode) {
 function renderOrbitView() {
   const cv = document.getElementById('orbit-canvas');
   if(!cv) return;
-  const W = cv.parentElement?.clientWidth || 800;
-  const H = cv.parentElement?.clientHeight || 500;
+  const _pr = cv.parentElement?.getBoundingClientRect();
+  const W = (_pr && _pr.width  > 10) ? _pr.width  : (cv.parentElement?.clientWidth  || 800);
+  const H = (_pr && _pr.height > 10) ? _pr.height : (cv.parentElement?.clientHeight || 500);
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   const bg = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H));
@@ -7050,7 +7087,8 @@ async function loadSheets(){
     // Fetch all config tabs in parallel — POST with read action
     // (GET requests to Apps Script doPost() deployments do not work)
     const tabs = ['02_Launch_Sites','01_Vehicles','04_MPL_Constants','05_GDP_Table',
-                  '06_Population_Zones','07_Failure_Modes','00_MPL_Config','08_Operators'];
+                  '06_Population_Zones','07_Failure_Modes','00_MPL_Config','08_Operators',
+                  '03_High_Value_Assets','09_BRIDGE_W5_Targets'];
     const results = await Promise.allSettled(
       tabs.map(tab =>
         fetch(APPS_SCRIPT, {
@@ -7061,10 +7099,10 @@ async function loadSheets(){
         }).then(r => r.json())
       )
     );
-    const [sr,vr,cr,gr,pzr,fmr,cfgr,opr] = results.map(r=>r.status==='fulfilled'?r.value:null);
+    const [sr,vr,cr,gr,pzr,fmr,cfgr,opr,hvar,bwr] = results.map(r=>r.status==='fulfilled'?r.value:null);
     // BC-001: sanitize all incoming rows before use
     const cleanRows = res => res?.rows ? { ...res, rows: res.rows.map(sanitizeRow) } : res;
-    const [src,vrc,crc,grc,pzrc,fmrc,cfgrc,oprc] = [sr,vr,cr,gr,pzr,fmr,cfgr,opr].map(cleanRows);
+    const [src,vrc,crc,grc,pzrc,fmrc,cfgrc,oprc,hvrc,bwrc] = [sr,vr,cr,gr,pzr,fmr,cfgr,opr,hvar,bwr].map(cleanRows);
 
     // Sites
     if(src?.rows) S.sites = src.rows
@@ -7152,10 +7190,73 @@ async function loadSheets(){
       });
     }
 
+    // ── 03_High_Value_Assets — live HVA library (T-07: replaces embedded HVA_LIBRARY) ──
+    if(hvrc?.rows?.length) {
+      const liveHVAs = hvrc.rows.map(row => ({
+        id:         row.AssetID         || row.HVA_ID,
+        name:       row.AssetName       || row.Name,
+        type:       row.AssetType       || row.Type || 'Infrastructure',
+        cc:         row.CountryCode     || 'AUS',
+        lat:        +row.Latitude_dd    || 0,
+        lon:        +row.Longitude_dd   || 0,
+        propPerM2:  +row.PropValue_per_m2 || 1000,
+        revPerM2:   +row.RevLoss_per_m2   || 100,
+        timeOut:    +row.TimeOut_hrs      || 24,
+        envCost:    +row.EnvCost_AUD      || 500000,
+        toxic:      (row.ToxicHazard||'').toUpperCase()==='TRUE',
+        footprint:  +row.Footprint_m2     || 1000000,
+        col:        row.MapColour         || '#FF9F43',
+      })).filter(h => h.id && h.lat && h.lon);
+
+      if(liveHVAs.length) {
+        // Merge: update existing by ID, append new ones
+        liveHVAs.forEach(h => {
+          const idx = HVA_LIBRARY.findIndex(x=>x.id===h.id);
+          if(idx>=0) HVA_LIBRARY[idx]={...HVA_LIBRARY[idx],...h};
+          else HVA_LIBRARY.push(h);
+        });
+        // Rebuild globe data overlay with updated HVA positions
+        if(scene && globeDataMesh) setTimeout(buildDataOverlay, 200);
+        toast(`✓ HVA Library: ${liveHVAs.length} assets loaded from Sheet (03_High_Value_Assets)`);
+      }
+    }
+
+    // ── 09_BRIDGE_W5_Targets — ACHILLES bridge targets (replaces separate GET call) ──
+    if(bwrc?.rows?.length) {
+      const liveBridge = bwrc.rows.map(row => ({
+        id:           row.BridgeID,
+        objId:        row.ObjectID        || row.BridgeID,
+        name:         row.TargetName      || row.BridgeID,
+        sma:          +row.SMA_au         || 1.0,
+        ecc:          +row.Eccentricity   || 0.1,
+        inc:          +row.Inclination_deg|| 5,
+        diam:         +row.Diameter_km    || 0.5,
+        cls:          row.SpectralClass   || 'C',
+        dv:           +row.DeltaV_kms     || 4.5,
+        tof:          +row.TOF_days       || 180,
+        c3:           +row.C3_km2s2       || 10,
+        site:         row.LaunchSite      || 'LS005',
+        launchWindow: row.LaunchWindow    || '2027-Q1',
+        status:       row.Status          || 'AWAITING_MPL',
+        esa_pdi:      +row.ESA_PDI        || 0,
+        mass_Tg:      +row.Mass_Tg        || 0.1,
+      })).filter(t=>t.id);
+
+      if(liveBridge.length) {
+        liveBridge.forEach(t => {
+          const idx = ACHILLES_BRIDGE.findIndex(b=>b.id===t.id);
+          if(idx>=0) ACHILLES_BRIDGE[idx]={...ACHILLES_BRIDGE[idx],...t};
+          else ACHILLES_BRIDGE.push(t);
+        });
+        toast(`✓ ACHILLES Bridge: ${liveBridge.length} targets synced (09_BRIDGE_W5_Targets)`);
+      }
+    }
+
     S.sheetsOk = true;
     const badge = document.getElementById('sh-badge');
     if(badge){ badge.textContent='CONNECTED'; badge.style.color='var(--green)'; }
-    toast('✓ Sheets loaded — all 8 config tabs (BC-001 sanitized)');
+    const hvaCount = hvrc?.rows?.length || 0;
+    toast(`✓ Sheets loaded — 10 tabs · ${S.sites.length} sites · ${S.vehicles.length} vehicles · ${HVA_LIBRARY.length} HVAs`);
 
   } catch(e) {
     const badge = document.getElementById('sh-badge');
@@ -7340,8 +7441,13 @@ function removeCustomVehicle(idx) {
 async function fetchAchillesBridge() {
   if(!APPS_SCRIPT) return;
   try {
-    const url = `${APPS_SCRIPT}?action=read&tab=09_BRIDGE_W5_Targets`;
-    const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    // Must use POST with action:'read' — Apps Script doPost() only (doGet returns health JSON only)
+    const r = await fetch(APPS_SCRIPT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'read', tab: '09_BRIDGE_W5_Targets' }),
+      signal: AbortSignal.timeout(8000),
+    });
     if(!r.ok) return;
     const data = await r.json();
     if(!data?.rows?.length) return;
@@ -7650,13 +7756,15 @@ function ensureCorridorOverlay() {
 function bootApp(){
   S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES;
   S.operators=OPERATORS_DEFAULT; S.activeOperator=OPERATORS_DEFAULT[0];
-  renderSites(); initGlobe();
+  renderSites();
+  // Delay initGlobe 150ms — browser must complete layout before getBoundingClientRect() reads correctly
+  setTimeout(initGlobe, 150);
   setTimeout(applySettings, 1200);
   setTimeout(renderOperatorBadge, 800);
   setTimeout(fetchLiveGDP, 3000);
-  setTimeout(fetchAchillesBridge, 4000);
-  setTimeout(fetchLivePopDensity, 5000);   // WB population density
-  setTimeout(fetchJPLHorizons, 7000);      // JPL Horizons orbital elements
+  // fetchAchillesBridge now runs inside loadSheets() 10-tab POST batch — no separate call
+  setTimeout(fetchLivePopDensity, 5000);
+  setTimeout(fetchJPLHorizons, 7000);
   readShareHash();
 }
 window.addEventListener('load',runSplash);
