@@ -2726,28 +2726,6 @@ const VEHICLES = [
   { id:'V013', name:'SLS Block 1-class',      ico:'🛸', sub:'Super-Heavy',     ac:9800,  mass:2608000, stages:2, propellant:'H2/LOX',      isp_vac:453, thrust_kN:39144,expYield:18500, frags:850  },
   { id:'V014', name:'Neutron-class',          ico:'🚀', sub:'Medium-Heavy',    ac:4100,  mass:480000,  stages:2, propellant:'Methane/LOX', isp_vac:370, thrust_kN:8800, expYield:5600,  frags:390  },
 ];
-const TRANSITS = [
-  { id:'LAUNCH_ORBIT',         name:'Launch to Orbit',       ico:'⬆', phases:['UPRANGE','DOWNRANGE'] },
-  { id:'ORBITAL_INSERT',       name:'Orbital Insertion',     ico:'↗', phases:['DOWNRANGE']            },
-  { id:'CONTROLLED_REENTRY',   name:'Controlled Re-entry',   ico:'⬇', phases:['RETURN']               },
-  { id:'UNCONTROLLED_REENTRY', name:'Uncontrolled Re-entry', ico:'⚠', phases:['RETURN']               },
-  { id:'ESCAPE',               name:'Escape Trajectory',     ico:'→', phases:['UPRANGE','DOWNRANGE'] },
-  { id:'RETROGRADE',           name:'Retrograde Burn',       ico:'↩', phases:['DOWNRANGE','RETURN']   },
-];
-const FMODES = [
-  { id:'FM-001', name:'Engine Failure (MECO)',    cat:'Propulsion', casMult:1.0, envMult:1.0 },
-  { id:'FM-002', name:'Structural Breakup',       cat:'Structural', casMult:1.8, envMult:1.2 },
-  { id:'FM-003', name:'FSS Failure',              cat:'Safety',     casMult:2.0, envMult:1.3 },
-  { id:'FM-004', name:'Trajectory Deviation',     cat:'Navigation', casMult:1.2, envMult:1.0 },
-  { id:'FM-005', name:'Toxic Gas Release',        cat:'Propellant', casMult:1.0, envMult:3.5 },
-  { id:'FM-006', name:'Solid Motor Burnthrough',  cat:'Propulsion', casMult:1.5, envMult:1.0 },
-  { id:'FM-007', name:'Stage Separation Fail',    cat:'Structural', casMult:1.3, envMult:1.0 },
-  { id:'FM-008', name:'Orbital Decay Re-entry',   cat:'Orbital',    casMult:0.8, envMult:1.0 },
-  { id:'FM-009', name:'Payload Fairing Failure',  cat:'Structural', casMult:0.8, envMult:1.0 },
-  { id:'FM-010', name:'GNC System Failure',       cat:'Navigation', casMult:1.4, envMult:1.0 },
-  { id:'FM-011', name:'Propellant Ignition',      cat:'Propulsion', casMult:2.2, envMult:2.5 },
-  { id:'FM-012', name:'Re-entry Vehicle Failure', cat:'Structural', casMult:1.0, envMult:1.0 },
-];
 
 /* ═══════════════════════════════════════════════════════
    MPL ENGINE — ASA 2019
