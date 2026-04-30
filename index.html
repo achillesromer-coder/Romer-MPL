@@ -406,17 +406,22 @@ body {
 ═══════════════════════════════════════════ */
 .globe-wrap {
   flex: 1;
-  position: relative;
+  position: relative;   /* positioning context for #globe-canvas */
   overflow: hidden;
-  min-height: 0;      /* critical flex shrink */
+  min-height: 0;        /* allows flex item to shrink below content height */
+  /* height is provided by parent flex container (.main align-items:stretch) */
 }
 
-/* telebar is .flex-shrink:0 — defined below with full styles */
+/* telebar is defined below with full styles — flex-shrink:0 already set there */
 
 #globe-canvas {
+  /* Anchor to top-left of .globe-wrap (position:relative).
+     Three.js renderer.setSize(W,H) sets inline width/height from this anchor.
+     position:absolute prevents ANY layout flow from pushing canvas downward. */
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
-  /* Three.js renderer.setSize() owns canvas.style.width/height — no CSS override here.
-     position:absolute + !important would fight setSize and produce resolution mismatch. */
   background: radial-gradient(ellipse at 38% 42%, #0a1624 0%, #040a12 55%, #020508 100%);
 }
 
@@ -5119,13 +5124,13 @@ function initGlobe(){
   const canvas=document.getElementById('globe-canvas');
   if(!canvas){ console.warn('[Römer MPL] Globe canvas not found'); return; }
 
-  // getBoundingClientRect is accurate post-layout; clientWidth/Height is 0
-  // if the parent hasn't painted yet (common on first boot).
-  // Falls back to window dimensions minus panel width + topbar.
+  // Measure the PARENT (globe-wrap) — it has flex-determined dimensions.
+  // canvas is position:absolute so its own BoundingClientRect is meaningless pre-init.
+  // Fallback: viewport minus panel(300) and both bars(topbar 48 + telebar 42 = 90).
   const parent = canvas.parentElement;
   let rect = parent.getBoundingClientRect();
-  const W = rect.width  > 10 ? rect.width  : window.innerWidth - 300;
-  const H = rect.height > 10 ? rect.height : window.innerHeight - 48;
+  const W = rect.width  > 10 ? Math.floor(rect.width)  : Math.max(400, window.innerWidth  - 300);
+  const H = rect.height > 10 ? Math.floor(rect.height) : Math.max(300, window.innerHeight - 90);
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled=true;
@@ -5181,18 +5186,17 @@ function initGlobe(){
 
   window.addEventListener('resize',()=>{
     const _r=canvas.parentElement.getBoundingClientRect();
-    const W2=_r.width>10?_r.width:window.innerWidth-300;
-    const H2=_r.height>10?_r.height:window.innerHeight-48;
+    const W2=_r.width>10  ? Math.floor(_r.width)  : Math.max(400,window.innerWidth-300);
+    const H2=_r.height>10 ? Math.floor(_r.height) : Math.max(300,window.innerHeight-90);
     renderer.setSize(W2,H2);camera.aspect=W2/H2;camera.updateProjectionMatrix();
     if(globeDataMesh&&globeDataMesh.rotation) globeDataMesh.rotation.copy(globe.rotation);
   });
 
-  // Re-measure and resize once after a short delay to catch any layout shift
-  // that happens between script execution and first paint
+  // Re-measure once after a short delay to catch layout shift after splash fade
   setTimeout(()=>{
     const _r=canvas.parentElement.getBoundingClientRect();
     if(_r.width>10&&_r.height>10){
-      renderer.setSize(_r.width,_r.height);
+      renderer.setSize(Math.floor(_r.width),Math.floor(_r.height));
       camera.aspect=_r.width/_r.height;
       camera.updateProjectionMatrix();
     }
