@@ -7037,22 +7037,33 @@ function buildDebrisCone(siteLat, siteLon, alt_km) {
 
 /* ─── Sheets ─── */
 async function loadSheets(){
-  // Always pre-load embedded fallback data
+  // Always pre-load embedded fallback data first
   S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES; S.sheetsOk=false;
 
+  const badge = document.getElementById('sh-badge');
+
   if(!APPS_SCRIPT) {
-    // Update settings panel badge
-    const badge = document.getElementById('sh-badge');
     if(badge){ badge.textContent='NO SCRIPT URL'; badge.style.color='var(--orange)'; }
     return;
   }
 
+  // Update badge to loading state
+  if(badge){ badge.textContent='LOADING…'; badge.style.color='var(--gold)'; }
+
   try {
-    // Fetch all 8 config tabs in parallel
+    // Fetch all config tabs in parallel — POST with read action
+    // (GET requests to Apps Script doPost() deployments do not work)
     const tabs = ['02_Launch_Sites','01_Vehicles','04_MPL_Constants','05_GDP_Table',
                   '06_Population_Zones','07_Failure_Modes','00_MPL_Config','08_Operators'];
     const results = await Promise.allSettled(
-      tabs.map(tab => fetch(`${APPS_SCRIPT}?tab=${tab}`, {signal:AbortSignal.timeout(8000)}).then(r=>r.json()))
+      tabs.map(tab =>
+        fetch(APPS_SCRIPT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'read', tab }),
+          signal: AbortSignal.timeout(8000)
+        }).then(r => r.json())
+      )
     );
     const [sr,vr,cr,gr,pzr,fmr,cfgr,opr] = results.map(r=>r.status==='fulfilled'?r.value:null);
     // BC-001: sanitize all incoming rows before use
