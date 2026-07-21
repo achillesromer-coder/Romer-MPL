@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-21",
+  "status": "CONTROLLED_INTERNAL",
+  "release_gate": "BLOCKED",
+  "live_route": "https://romer.industries/mpl",
+  "live_route_verification": {
+    "owner_confirmed": true,
+    "public_site_link_observed": true,
+    "rendered_dom_retrieved_by_audit": false,
+    "state": "BLOCKED_BROWSER_EVIDENCE_REQUIRED"
+  },
+  "git_authority": {
+    "repository": "achillesromer-coder/Romer-MPL",
+    "canonical_operational_file": "index.html",
+    "observed_blob_sha": "34741b3cf8923cb55fe7c6ccaabdb3f5f1ba2053",
+    "line_count": 7780,
+    "lineage_commit": "27bf2d90278c9f36d3fad941daf8a0433ac51f07",
+    "lineage_action": "renamed romer_mpl_v0.00.1 (1).html to index.html"
+  },
+  "regulatory_sources": [
+    {
+      "title": "Maximum Probable Loss Methodology",
+      "authority": "Australian Space Agency",
+      "publication_date": "2019-08-01",
+      "url": "https://www.space.gov.au/about-agency/publications/maximum-probable-loss-methodology",
+      "state": "PRIMARY_GUIDANCE"
+    },
+    {
+      "title": "Space (Launches and Returns) Act 2018",
+      "authority": "Federal Register of Legislation",
+      "latest_compilation_observed": "2024-10-14",
+      "url": "https://www.legislation.gov.au/C2004A00391/latest",
+      "state": "IN_FORCE"
+    },
+    {
+      "title": "Space (Launches and Returns) (Insurance) Rules 2019",
+      "authority": "Federal Register of Legislation",
+      "url": "https://www.legislation.gov.au/F2019L01120/",
+      "state": "IN_FORCE"
+    },
+    {
+      "title": "Space (Launches and Returns) (General) Rules 2019",
+      "authority": "Federal Register of Legislation",
+      "latest_compilation_observed": "2025-02-04",
+      "url": "https://www.legislation.gov.au/F2019L01118/latest",
+      "state": "IN_FORCE"
+    }
+  ],
+  "integration_inventory": {
+    "mpl_sheet": "PRESENT_LOCKED_ID_REDACTED_FROM_AUDIT_MANIFEST",
+    "achilles_workbook": "PRESENT_LOCKED_ID_REDACTED_FROM_AUDIT_MANIFEST",
+    "drive_folder": "PRESENT_LOCKED_ID_REDACTED_FROM_AUDIT_MANIFEST",
+    "apps_script_deployment": "PRESENT_LOCKED_ENDPOINT_REDACTED_FROM_AUDIT_MANIFEST"
+  },
+  "package_boundaries": [
+    "MPL is Maximum Probable Loss.",
+    "N^3 / GeoMatrices / Trinity Probability Well remains separate even when historical files coexist in the repository.",
+    "Raphael Equations remains independent personal IP and may only be used with provenance.",
+    "Final LightSpeed soft launch is deferred to a later owner prompt."
+  ],
+  "test_receipt": {
+    "harness": "tools/mpl_static_audit.py",
+    "tests": "tests/test_mpl_static_audit.py",
+    "tests_run": 12,
+    "tests_passed": 12,
+    "external_dependencies": false,
+    "actual_index_execution": "PENDING_CODEX_OR_CI"
+  },
+  "critical_open": [
+    "MPL-REG-001",
+    "MPL-CLAIM-001",
+    "MPL-CLAIM-002",
+    "MPL-BUG-001",
+    "MPL-BUG-002",
+    "MPL-SEC-001"
+  ],
+  "non_actions": [
+    "No index.html modification",
+    "No live deployment",
+    "No merge",
+    "No noindex removal",
+    "No source deletion",
+    "No Sheets, Apps Script, ACHILLES, Drive or webhook write",
+    "No regulatory approval or application-readiness claim"
+  ]
+}
