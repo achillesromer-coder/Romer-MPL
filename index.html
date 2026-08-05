@@ -6,15 +6,15 @@
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta name="robots" content="noindex">
 <meta property="og:title" content="Römer MPL Platform — Maximum Probable Loss Engine">
-<meta property="og:description" content="ASA-compliant Maximum Probable Loss calculation for Australian space launch licensing.">
+<meta property="og:description" content="Maximum Probable Loss screening and decision-support prototype for Australian space launch planning. Independent specialist validation is required before regulatory use.">
 <meta property="og:type" content="website">
-<title>Römer MPL Platform — v0.1.0</title>
+<title>Römer MPL Platform — v0.2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Orbitron:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════════════════════════════════
-   RÖMER DESIGN SYSTEM — v0.1.0
+   RÖMER DESIGN SYSTEM — v0.2.0
    Typography: EB Garamond (body/UI) + Orbitron (system labels) + JetBrains Mono (data)
    v0.00.6: BC-001 sheet encoding sanitizer, Drive upload, azimuth-corridor HVA weighting,
             all-13-HVA exposure table, per-phase exposure breakdown
@@ -57,17 +57,14 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html {
-  height: 100%; max-height: 100%;
-  overflow: hidden;           /* prevent any outer scroll */
-}
+html { height: 100%; }
 
 body {
   font-family: var(--font-body);
   background: var(--bg0);
   color: var(--text2);
-  height: 100%; max-height: 100vh;
-  overflow: hidden;           /* belt-and-braces — no page scroll at body level */
+  height: 100%; min-height: 100vh;
+  overflow: hidden;
   user-select: none;
   font-size: 15px;
   line-height: 1.5;
@@ -85,9 +82,6 @@ body {
   transition: opacity 1s ease;
 }
 #splash.out { opacity: 0; pointer-events: none; }
-/* After fade completes, fully remove from layout */
-#splash.out { transition: opacity 1s ease; }
-
 
 .splash-mark {
   display: flex; flex-direction: column; align-items: center; gap: 24px;
@@ -145,9 +139,7 @@ body {
    APP SHELL
 ═══════════════════════════════════════════ */
 #app {
-  display: flex; flex-direction: column;
-  height: 100vh; max-height: 100vh;
-  overflow: hidden;
+  display: flex; flex-direction: column; height: 100vh; min-height: 100%;
   opacity: 0; transition: opacity 0.7s ease;
 }
 #app.live { opacity: 1; }
@@ -201,11 +193,7 @@ body {
 .icon-btn:hover { background: var(--bg2); color: var(--text1); border-color: var(--border2); }
 
 /* MAIN LAYOUT */
-.main {
-  display: flex; flex: 1;
-  overflow: hidden; position: relative;
-  min-height: 0;    /* critical: allows flex children to shrink below content size */
-}
+.main { display: flex; flex: 1; overflow: hidden; position: relative; }
 
 /* ═══════════════════════════════════════════
    LEFT PANEL
@@ -215,7 +203,6 @@ body {
   background: var(--bg1);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
-  min-height: 0;       /* required for overflow-y:auto to work in flex child */
   transform: translateX(0);
   transition: transform 0.42s cubic-bezier(0.16,1,0.3,1);
   z-index: 10;
@@ -238,7 +225,7 @@ body {
 }
 
 .panel-body {
-  flex: 1; overflow: auto; padding: 14px 18px;
+  flex: 1; overflow-y: auto; padding: 14px 18px;
   scrollbar-width: thin; scrollbar-color: var(--bg3) transparent;
 }
 .panel-body::-webkit-scrollbar { width: 3px; }
@@ -404,24 +391,10 @@ body {
 /* ═══════════════════════════════════════════
    GLOBE / VIEWPORT
 ═══════════════════════════════════════════ */
-.globe-wrap {
-  flex: 1;
-  position: relative;   /* positioning context for #globe-canvas */
-  overflow: hidden;
-  min-height: 0;        /* allows flex item to shrink below content height */
-  /* height is provided by parent flex container (.main align-items:stretch) */
-}
-
-/* telebar is defined below with full styles — flex-shrink:0 already set there */
+.globe-wrap { flex: 1; position: relative; overflow: hidden; }
 
 #globe-canvas {
-  /* Anchor to top-left of .globe-wrap (position:relative).
-     Three.js renderer.setSize(W,H) sets inline width/height from this anchor.
-     position:absolute prevents ANY layout flow from pushing canvas downward. */
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
+  width: 100%; height: 100%;
   background: radial-gradient(ellipse at 38% 42%, #0a1624 0%, #040a12 55%, #020508 100%);
 }
 
@@ -1025,6 +998,17 @@ body {
   white-space: nowrap; backdrop-filter: blur(12px);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#globe-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.globe-wrap { position:relative; min-width:0; min-height:0; contain:layout paint; }
+.mpl-model-notice { padding:8px 10px; margin:0 0 10px; border:1px solid rgba(255,216,77,.22); border-radius:var(--r-sm); background:rgba(255,216,77,.06); font-family:var(--font-mono); font-size:8px; line-height:1.45; color:var(--text3); letter-spacing:.04em; }
+.mpl-component-chart { display:grid; gap:6px; padding:10px 12px; margin:0 0 14px; border:1px solid var(--border); border-radius:var(--r); background:rgba(17,22,29,.72); }
+.mpl-component-row { display:grid; grid-template-columns:92px 1fr 82px; gap:8px; align-items:center; }
+.mpl-component-name,.mpl-component-value { font-family:var(--font-mono); font-size:8px; color:var(--text3); }
+.mpl-component-value { text-align:right; color:var(--text2); }
+.mpl-component-track { height:7px; overflow:hidden; border-radius:20px; background:var(--bg3); border:1px solid var(--border); }
+.mpl-component-fill { display:block; height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg,var(--blue),var(--gold),var(--orange)); transition:width .65s cubic-bezier(.16,1,.3,1); }
+.mpl-receipt { display:flex; flex-wrap:wrap; gap:5px 10px; padding:7px 10px; margin-bottom:12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size:8px; color:var(--text4); }
+.mpl-receipt strong { color:var(--text3); font-weight:500; }
 </style>
 </head>
 <body>
@@ -1087,7 +1071,7 @@ body {
         <span class="op-badge-name" id="op-badge-name">N. Römer</span>
         <span class="op-badge-id" id="op-badge-id">OP-001</span>
       </div>
-      <div class="tb-version">v0.1.0</div>
+      <div class="tb-version">v0.2.0</div>
       <div class="live-badge" id="live-badge">STANDBY</div>
       <button class="icon-btn" title="Keyboard shortcuts" onclick="toggleKbd()">?</button>
     </div>
@@ -1343,8 +1327,7 @@ body {
       </div>
     <!-- Panel collapse toggle -->
     <button class="panel-collapse-btn" id="panel-toggle" onclick="togglePanel()" title="Collapse panel">‹</button>
-    </div><!-- /panel -->
-    </div><!-- /panel-wrap -->
+    </div>
 
     <!-- GLOBE -->
     <div class="globe-wrap" id="globe-wrap">
@@ -1439,7 +1422,7 @@ body {
 
           <!-- IIP LIVE BADGE -->
           <div class="iip-badge" id="iip-badge">
-            <div class="iip-badge-title">INSTANTANEOUS IMPACT POINT</div>
+            <div class="iip-badge-title">INSTANTANEOUS IMPACT POINT · SCREENING</div>
             <div class="iip-badge-row"><span>Lat</span><span id="iip-lat">—</span></div>
             <div class="iip-badge-row"><span>Lon</span><span id="iip-lon">—</span></div>
             <div class="iip-badge-row"><span>Prob</span><span id="iip-prob">—</span></div>
@@ -1458,7 +1441,9 @@ body {
               <div class="mpl-title">MPL CALCULATION RESULT</div>
               <div class="mpl-subtitle" id="mpl-site-desc">Woomera Range Complex · Uprange Phase</div>
 
-              <div id="mpl-compliance-badge" class="compliance-badge compliance-review">ASA MPL — REVIEW REQUIRED</div>
+              <div id="mpl-compliance-badge" class="compliance-badge compliance-review">MODEL CHECK — REVIEW REQUIRED</div>
+              <div class="mpl-model-notice">SCREENING / DECISION SUPPORT ONLY. This interface does not establish regulatory acceptance, launch-permit sufficiency, public-safety probability, or an application-ready MPL. Independent specialist validation and source review remain mandatory.</div>
+              <div class="mpl-receipt" id="mpl-receipt"><span><strong>MODEL</strong> v0.2.0</span><span><strong>METHOD SOURCE</strong> 2019-08-01</span><span><strong>DATA</strong> embedded fallback</span><span><strong>HASH</strong> pending</span></div>
 
               <div class="mpl-grid">
                 <div class="mpl-metric">
@@ -1488,7 +1473,7 @@ body {
               </div>
 
               <div class="mpl-divider"></div>
-              <div style="font-family:var(--font-mono);font-size:9px;color:var(--text4);letter-spacing:.12em;margin-bottom:8px;">MPL BREAKDOWN — ASA METHODOLOGY 2019</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--text4);letter-spacing:.12em;margin-bottom:8px;">MPL BREAKDOWN — SCREENING IMPLEMENTATION · SOURCE METHOD 2019</div>
 
               <div class="mpl-breakdown">
                 <div class="mpl-row">
@@ -1517,10 +1502,16 @@ body {
                 <span class="mpl-total-label">TOTAL MPL</span>
                 <span class="mpl-total-val" id="mr-mpl-total">—</span>
               </div>
+              <div class="mpl-component-chart" id="mpl-component-chart" aria-label="MPL component composition">
+                <div class="mpl-component-row" data-component="MPL_CAS"><span class="mpl-component-name">CASUALTY</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
+                <div class="mpl-component-row" data-component="MPL_PD"><span class="mpl-component-name">PROPERTY</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
+                <div class="mpl-component-row" data-component="MPL_LOU"><span class="mpl-component-name">LOSS OF USE</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
+                <div class="mpl-component-row" data-component="MPL_ENV"><span class="mpl-component-name">ENVIRONMENT</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
+              </div>
               <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:14px;">
                 <div>
-                  <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.12em;">INSURANCE REQUIREMENT (110%)</div>
-                  <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:1px;">ASA §3.3 — Minimum coverage recommendation</div>
+                  <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.12em;">INDICATIVE COVERAGE BUFFER (110%)</div>
+                  <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:1px;">MODEL BUFFER — 110% OF SCREENING MPL; NOT A REGULATORY DETERMINATION</div>
                 </div>
                 <span style="font-family:var(--font-mono);font-size:14px;color:var(--blue);font-weight:600;" id="mr-ins-req">—</span>
               </div>
@@ -2145,7 +2136,7 @@ body {
 .sat-badge-leo  { background:rgba(33,208,122,.12);color:var(--green);border:1px solid rgba(33,208,122,.2); }
 .sat-badge-geo  { background:rgba(255,216,77,.12);color:var(--gold);border:1px solid rgba(255,216,77,.2); }
 
-/* ─── v0.1.0 Utility Classes — compaction of repeated inline patterns ─── */
+/* ─── v0.2.0 Utility Classes — compaction of repeated inline patterns ─── */
 .u-mono8   { font-family:var(--font-mono);font-size:8px; }
 .u-mono9   { font-family:var(--font-mono);font-size:9px; }
 .u-mono10  { font-family:var(--font-mono);font-size:10px; }
@@ -2195,7 +2186,7 @@ body {
 
 <script>
 /* ════════════════════════════════════════════════════════
-   RÖMER MPL PLATFORM — v0.1.0  ★ RELEASE BUILD ★
+   RÖMER MPL PLATFORM — v0.2.0  ★ RELEASE BUILD ★
    Build: April 2026 | All active tasks complete
    ─────────────────────────────────────────────────────
    ── GLOBE ──────────────────────────────────────────────
@@ -2209,7 +2200,7 @@ body {
    Events: Max-Q · Stage separation · Orbital insertion
    Re-entry: Chapman heating · G-load · Blackout · Footprint ellipse
    ── MPL ENGINE ─────────────────────────────────────────
-   ASA 2024: CAS · PD · LOU · ENV · INS_REQ · Compliance
+   ASA methodology (published 2019): CAS · PD · LOU · ENV · screening output
    HVAs: 28 assets · Azimuth-corridor Gaussian weighting · Per-phase
    Data: 19 sites · 14+custom vehicles · 10 transits · 20 fmodes
    Data: 103 POP_ZONES (WB live) · 6 ACHILLES (JPL Horizons live)
@@ -2222,7 +2213,7 @@ body {
    Batch: Queue · 4 presets · AI analysis per scenario
    AI: Claude regulatory checklist · JSON schema · risk classification
    Runs: History · Operator filter · CSV export
-   PDF: Full ASA report · Orbital elements · HVA corridor table
+   PDF: Controlled model report · Orbital elements · HVA corridor table
    ── INTEGRATIONS ───────────────────────────────────────
    Apps Script (6): append · bridge · exposure · drive · batch · webhook
    ACHILLES W5/W6 · Drive upload · CF-022 Webhook
@@ -2241,6 +2232,137 @@ const MPL_SHEET_ID  = '1uXs-uPDCN8xNFErkAOrCEeYv0ctzoZb5XUYop5UEBvE';
 const APPS_SCRIPT   = 'https://script.google.com/macros/s/AKfycbwBP24wttav8SIXgpwOKFgVn2kbohuwHc7ZR_-fBzA0K0MXNaXAVYhxX6bM_CoHkVlw/exec'; // BC-002 COMPLETE — CF-025
 const DRIVE_FOLDER  = '1eRmR6kkNimF-U6-r6bQI9C7pWskc27W9';  // Römer Drive folder
 
+const MODEL_META = {
+  version: '0.2.0',
+  buildDate: '2026-08-05',
+  methodName: 'Australian Space Agency Maximum Probable Loss Methodology',
+  methodPublicationDate: '2019-08-01',
+  methodStatus: 'SCREENING_IMPLEMENTATION',
+  baseBlob: '34741b3cf8923cb55fe7c6ccaabdb3f5f1ba2053',
+  buildSha256: 'computed-at-release',
+  modelHash: 'pending',
+  constantRegistry: 'CONSTANT_RECEIPTS',
+  dataMode: 'EMBEDDED_FALLBACK',
+  dataTabs: {},
+  disclaimer: 'Decision support only. Independent specialist validation is required before regulatory or application use.'
+};
+
+const CONSTANT_RECEIPTS = Object.freeze({
+  'MC-001': { symbol:'CASUALTY_VALUE', units:'AUD/person', sourceTab:'MPL_Constants', methodSection:'§6.1', publicationDate:'2019-08-01', reviewStatus:'SOURCE_REVIEW_REQUIRED' },
+  'MC-002': { symbol:'ENV_BOUNDING', units:'AUD', sourceTab:'MPL_Constants', methodSection:'§6.4', publicationDate:'2019-08-01', reviewStatus:'SOURCE_REVIEW_REQUIRED' },
+  'MC-003': { symbol:'SECONDARY_MULT', units:'dimensionless', sourceTab:'MPL_Constants', methodSection:'§6.1.3', publicationDate:'2019-08-01', reviewStatus:'SOURCE_REVIEW_REQUIRED' },
+  'MC-004': { symbol:'PROPERTY_PCT', units:'fraction', sourceTab:'MPL_Constants', methodSection:'§6.2', publicationDate:'2019-08-01', reviewStatus:'SOURCE_REVIEW_REQUIRED' },
+  'MC-005': { symbol:'PROB_THRESHOLD', units:'probability', sourceTab:'MPL_Constants', methodSection:'§3.2', publicationDate:'2019-08-01', reviewStatus:'SOURCE_REVIEW_REQUIRED' },
+  'MC-006': { symbol:'UPRANGE_IA_M2', units:'m²', sourceTab:'MPL_Constants', methodSection:'§6.2.3', publicationDate:'2019-08-01', reviewStatus:'SOURCE_REVIEW_REQUIRED' }
+});
+
+const TAB_ALIASES = Object.freeze({
+  sites: ['Launch_Sites','02_Launch_Sites'],
+  vehicles: ['Vehicles','01_Vehicles'],
+  constants: ['MPL_Constants','04_MPL_Constants'],
+  gdp: ['GDP_Table','05_GDP_Table'],
+  population: ['Population_Zones','06_Population_Zones'],
+  failureModes: ['Failure_Modes','07_Failure_Modes'],
+  config: ['MPL_Config','00_MPL_Config'],
+  operators: ['Operators','08_Operators'],
+  assets: ['High_Value_Assets','03_High_Value_Assets','03_HVAs'],
+  bridge: ['BRIDGE_W5_Targets','09_BRIDGE_W5_Targets'],
+  missionLog: ['Mission_Log','10_Mission_Log'],
+  exposures: ['Asset_Exposures','11_Asset_Exposures'],
+  audit: ['Audit_Trail','12_Audit_Trail']
+});
+
+function isTruthy(value) {
+  if(value === true || value === 1) return true;
+  return ['TRUE','YES','Y','1','ACTIVE'].includes(String(value ?? '').trim().toUpperCase());
+}
+function finiteNumber(value, fallback=0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+function safeExternalUrl(value) {
+  try {
+    const u = new URL(String(value || ''));
+    if(u.protocol !== 'https:') return null;
+    const h = u.hostname.toLowerCase();
+    if(h === 'localhost' || h === '127.0.0.1' || h === '::1' || /^10\./.test(h) || /^192\.168\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)) return null;
+    return u.href;
+  } catch { return null; }
+}
+async function computeModelHash() {
+  try {
+    const bytes = new TextEncoder().encode(document.documentElement.outerHTML);
+    const hash = await crypto.subtle.digest('SHA-256', bytes);
+    MODEL_META.modelHash = [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
+  } catch { MODEL_META.modelHash = MODEL_META.baseBlob.slice(0,16); }
+  updateModelReceipt();
+  return MODEL_META.modelHash;
+}
+function updateModelReceipt() {
+  const el=document.getElementById('mpl-receipt');
+  if(!el) return;
+  const liveTabs=Object.keys(MODEL_META.dataTabs).length;
+  el.innerHTML = `<span><strong>MODEL</strong> ${escapeHTML(MODEL_META.version)}</span>`+
+    `<span><strong>METHOD SOURCE</strong> ${escapeHTML(MODEL_META.methodPublicationDate)}</span>`+
+    `<span><strong>DATA</strong> ${escapeHTML(MODEL_META.dataMode)}${liveTabs?` · ${liveTabs} tabs`:''}</span>`+
+    `<span><strong>HASH</strong> ${escapeHTML(MODEL_META.modelHash)}</span>`;
+}
+function normalizeRows(payload) {
+  const raw = Array.isArray(payload) ? payload : (payload?.rows || payload?.data || payload?.values || []);
+  return Array.isArray(raw) ? raw.filter(r=>r && typeof r==='object' && !Array.isArray(r)).map(sanitizeRow) : [];
+}
+async function readSheetTab(candidates, timeoutMs=9000) {
+  const names=Array.isArray(candidates)?candidates:[candidates];
+  let lastError=null;
+  for(const tab of names) {
+    try {
+      const response=await fetch(APPS_SCRIPT, {
+        method:'POST',
+        body:JSON.stringify({action:'read',tab}),
+        signal:AbortSignal.timeout(timeoutMs),
+      });
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload=await response.json();
+      const rows=normalizeRows(payload);
+      if(rows.length || payload?.ok) {
+        MODEL_META.dataTabs[tab]={rows:rows.length,ts:new Date().toISOString()};
+        return {tab,rows,payload};
+      }
+      lastError=new Error(`No rows returned for ${tab}`);
+    } catch(err) { lastError=err; }
+  }
+  throw lastError || new Error(`No readable sheet tab: ${names.join(', ')}`);
+}
+function dataBadge(label, colour='var(--text4)') {
+  const badge=document.getElementById('sh-badge');
+  if(badge){ badge.textContent=label; badge.style.color=colour; }
+}
+function toast(message, duration=3200) {
+  const el=document.getElementById('toast');
+  if(!el){ console.info('[Römer MPL]',message); return; }
+  el.textContent=String(message??'');
+  el.classList.add('show');
+  clearTimeout(S._toastTimer);
+  S._toastTimer=setTimeout(()=>el.classList.remove('show'),duration);
+}
+function resizeGlobe() {
+  if(!renderer || !camera) return;
+  const canvas=document.getElementById('globe-canvas');
+  const wrap=canvas?.parentElement;
+  if(!wrap) return;
+  const rect=wrap.getBoundingClientRect();
+  const W=Math.max(320,Math.round(rect.width || window.innerWidth-(S.panelCollapsed?0:300)));
+  const H=Math.max(260,Math.round(rect.height || window.innerHeight-90));
+  renderer.setSize(W,H,false);
+  camera.aspect=W/H;
+  camera.updateProjectionMatrix();
+  if(globeDataMesh?.rotation && globe?.rotation) globeDataMesh.rotation.copy(globe.rotation);
+}
+
+
 /* ─── BC-001: SHEET ENCODING SANITIZER ─────────────────────────────────────
    Fixes 16 known encoding artifacts in MPL Engine Sheet cells.
    Applied to every string value fetched from Apps Script before use.
@@ -2253,36 +2375,15 @@ const DRIVE_FOLDER  = '1eRmR6kkNimF-U6-r6bQI9C7pWskc27W9';  // Römer Drive fold
 ──────────────────────────────────────────────────────────────────────────── */
 function sanitizeCell(v) {
   if (v === null || v === undefined) return '';
-  let s = String(v);
-  // A) Named HTML entities
-  s = s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-  // A) Numeric HTML entities — strip control chars (&#1;–&#31;), decode printables
-  s = s.replace(/&#(\d+);/g, (_, n) => {
-    const code = +n;
-    if (code < 32) return '';   // control chars → gone
-    return String.fromCharCode(code);
-  });
-  // B) Boolean corruption (common OCR/paste artifact: leading char dropped)
-  if (/^EALSE$/i.test(s.trim())) s = 'FALSE';
-  if (/^RUE$/i.test(s.trim()))   s = 'TRUE';
-  // C) Color hash corruption — fix known gold/orange/red substitutions
-  //    Pattern: 6-char hex with ? or other non-hex char at known positions
-  s = s.replace(/^([0-9A-Fa-f]{3})\?([0-9A-Fa-f]{2})$/, (_, a, b) => {
-    // Try to recover: map known palettes by prefix
-    const tbl = { 'FFD':'FFD84D', 'FF9':'FF9F43', 'FF5':'FF5C5C', '4FD':'4FD1FF', '21D':'21D07A' };
-    return tbl[a.toUpperCase()] || (a + '0' + b);
-  });
-  // Also handle full 6-char with internal ?
-  s = s.replace(/^([0-9A-Fa-f]{2,5})\?([0-9A-Fa-f]*)$/, (m, a, b) => {
-    const tbl = { 'FFD8': 'FFD84D', 'FF9F': 'FF9F43', 'FF5C': 'FF5C5C', '4FD1': '4FD1FF', '21D0': '21D07A', '6B0A': '6B0AC9' };
-    for (const [k,fix] of Object.entries(tbl)) { if ((a+b).startsWith(k.slice(0,a.length))) return fix; }
-    return m;
-  });
-  // D) ATM@ prefix / control-char prefixes (CF-028 "ATM@&#15;P" pattern)
-  s = s.replace(/^ATM@[^\w]*/i, '').replace(/^[^\x20-\x7E]+/, '');
-  // E) Strip non-printable ASCII throughout
-  s = s.replace(/[\x00-\x1F\x7F]/g, '');
-  return s.trim();
+  if (typeof v === 'boolean' || typeof v === 'number') return v;
+  let str = String(v);
+  str = str.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  str = str.replace(/&#(\d+);/g, (_, n) => (+n < 32 ? '' : String.fromCharCode(+n)));
+  if (/^EALSE$/i.test(str.trim())) str = 'FALSE';
+  if (/^RUE$/i.test(str.trim())) str = 'TRUE';
+  str = str.replace(/^([0-9A-Fa-f]{3})\?([0-9A-Fa-f]{2})$/, (_, a, b) => ({'FFD':'FFD84D','FF9':'FF9F43','FF5':'FF5C5C','4FD':'4FD1FF','21D':'21D07A'}[a.toUpperCase()] || (a+'0'+b)));
+  str = str.replace(/^ATM@[^\w]*/i, '').replace(/^[^\x20-\x7E]+/, '').replace(/[\x00-\x1F\x7F]/g, '');
+  return str.trim();
 }
 
 /* Sanitize an entire row object from Apps Script */
@@ -2308,6 +2409,7 @@ const S = {
   acOverride: 0, advSecMult: 1.5, advIA: 0,
   featAiAnalysis: false,
   achillesRef: null,
+  dataErrors: [], dataLoadedAt: null,
 };
 
 /* ─── EMBEDDED OPERATOR PROFILES (08_Operators — OP-001/002/004) ─── */
@@ -2339,7 +2441,7 @@ function saveSettings() {
   try { sessionStorage.setItem('romer_mpl_settings', str); } catch {}
 }
 
-/* ─── ASA MPL CONSTANTS — AUD 2024 (from 04_MPL_Constants) ─── */
+/* ─── MPL SCREENING CONSTANTS — source-controlled, independent review required ─── */
 const ASA = {
   CASUALTY_VALUE:   6271750,  // AUD — MC-001 (ASA §6.1)
   ENV_BOUNDING:     237000,   // AUD — MC-002 (ASA §6.4)
@@ -2751,9 +2853,9 @@ const VEHICLES = [
   { id:'V013', name:'SLS Block 1-class',      ico:'🛸', sub:'Super-Heavy',     ac:9800,  mass:2608000, stages:2, propellant:'H2/LOX',      isp_vac:453, thrust_kN:39144,expYield:18500, frags:850  },
   { id:'V014', name:'Neutron-class',          ico:'🚀', sub:'Medium-Heavy',    ac:4100,  mass:480000,  stages:2, propellant:'Methane/LOX', isp_vac:370, thrust_kN:8800, expYield:5600,  frags:390  },
 ];
-
 /* ═══════════════════════════════════════════════════════
-   MPL ENGINE — ASA 2019
+   MPL SCREENING ENGINE — AUSTRALIAN SPACE AGENCY METHODOLOGY (PUBLISHED 2019)
+   Decision support only; not an application-ready or regulator-approved calculation.
 ═══════════════════════════════════════════════════════ */
 /* ─── HAVERSINE DISTANCE (km) between two lat/lon points ─── */
 function haversine(lat1, lon1, lat2, lon2) {
@@ -2876,11 +2978,12 @@ function calculateMPL({ vehicle, site, phase, zone, failModes, isUprange }) {
   // Insurance recommendation: 110% of MPL (industry standard buffer)
   const INS_REQ = Math.round(MPL_TOTAL * 1.10);
 
-  // Compliance thresholds (ASA §3.2)
-  let compliance = 'REVIEW REQUIRED';
-  if (MPL_TOTAL < 5000000)  compliance = 'PASS — BELOW THRESHOLD';
-  else if (MPL_TOTAL > 750000000) compliance = 'FAIL — EXCEEDS LIMIT';
-  else if (CAS_total === 0) compliance = 'PASS — ZERO CASUALTIES';
+  // Screening bands only. These are not launch-permit, insurance, or regulator acceptance determinations.
+  let compliance = 'MODEL REVIEW REQUIRED';
+  if (MPL_TOTAL < 5000000) compliance = 'LOWER SCREENING BAND';
+  else if (MPL_TOTAL > 750000000) compliance = 'UPPER SCREENING BAND — SPECIALIST REVIEW';
+  else compliance = 'INTERMEDIATE SCREENING BAND — SPECIALIST REVIEW';
+  if (CAS_total === 0) compliance += ' · ZERO MODELLED CASUALTIES';
 
   // v0.00.6: phase-level exposure summary for report
   const phaseExposure = {
@@ -2898,6 +3001,7 @@ function calculateMPL({ vehicle, site, phase, zone, failModes, isUprange }) {
     phaseExposure,
     nomAz, CORRIDOR_HALF_DEG,
     compliance, phase,
+    modelVersion:MODEL_META.version, modelHash:MODEL_META.modelHash, methodPublicationDate:MODEL_META.methodPublicationDate,
   };
 }
 const fmtUSD = n => {
@@ -2978,8 +3082,10 @@ function togglePanel() {
   S.panelCollapsed = !S.panelCollapsed;
   document.getElementById('panel').classList.toggle('collapsed', S.panelCollapsed);
   document.getElementById('panel-toggle').textContent = S.panelCollapsed ? '›' : '‹';
-  // Dispatch resize after the 420ms CSS transition so the globe re-measures its container
-  setTimeout(() => window.dispatchEvent(new Event('resize')), 450);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    resizeGlobe();
+    if(S.view==='orbit') renderOrbitView();
+  }));
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -3120,7 +3226,7 @@ function initLaunchScene() {
   const sun=new THREE.DirectionalLight(0xfff0e0,2); sun.position.set(80,120,60); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); lScene.add(sun);
   lScene.add(Object.assign(new THREE.DirectionalLight(0x224466,0.5),{position:{set:()=>{}}}));
   const fill=new THREE.DirectionalLight(0x224466,0.5); fill.position.set(-60,40,-60); lScene.add(fill);
-  window.addEventListener('resize',()=>{const _r=canvas.parentElement.getBoundingClientRect();const W2=_r.width>10?_r.width:window.innerWidth-300;const H2=_r.height>10?_r.height:window.innerHeight-48;lRenderer.setSize(W2,H2);lCamera.aspect=W2/H2;lCamera.updateProjectionMatrix();});
+  window.addEventListener('resize',()=>{const W2=canvas.parentElement.clientWidth,H2=canvas.parentElement.clientHeight;lRenderer.setSize(W2,H2);lCamera.aspect=W2/H2;lCamera.updateProjectionMatrix();});
   animateLaunch();
 }
 
@@ -3311,7 +3417,9 @@ function tickSim() {
 
   // ── IIP: great-circle propagation along launch azimuth ──
   const R = 6371;
-  const dist    = simData.alt * 2.8;
+  const IIP_SCREENING_ALTITUDE_RATIO = 2.8; // illustrative screening geometry only
+  const illustrativeDownrangeKm = altitudeKm => altitudeKm * IIP_SCREENING_ALTITUDE_RATIO;
+  const dist    = illustrativeDownrangeKm(simData.alt);
   const distRad = dist / R;
   const latRad  = simData.siteLat * Math.PI / 180;
   const bear    = simData.bearing;
@@ -3338,7 +3446,7 @@ function tickSim() {
   }
 
   // ── Risk heatmap ──
-  riskHeatPoints.push({lat:simData.iipLat, lon:simData.iipLon, risk:ZONES[simData.zone]||ZONES.RURAL});
+  riskHeatPoints.push({lat:simData.iipLat, lon:simData.iipLon, zone:simData.zone, risk:ZONES[simData.zone]||ZONES.RURAL});
   updateRiskHeatArc();
 
   updateSimHUD();
@@ -3515,8 +3623,8 @@ function updateSimHUD() {
   const fssEl=document.getElementById('hud-fss');
   if(fssEl) {
     const timeToFail = S.simFailT - simData.t;
-    fssEl.textContent = timeToFail > 30 ? 'NOMINAL' : timeToFail > 5 ? 'CAUTION' : 'NOMINAL';
-    fssEl.className   = timeToFail > 30 ? 'hud-val green' : 'hud-val gold';
+    fssEl.textContent = timeToFail > 30 ? 'NOMINAL' : timeToFail > 5 ? 'CAUTION' : 'WARNING';
+    fssEl.className   = timeToFail > 30 ? 'hud-val green' : timeToFail > 5 ? 'hud-val gold' : 'hud-val red';
   }
 
   // Mission event timeline — log key flight events
@@ -3549,7 +3657,7 @@ function updateSimHUD() {
   const zd = ZONES[simData.zone] || ZONES.RURAL;
   document.getElementById('iip-lat').textContent  = `${simData.iipLat.toFixed(4)}°`;
   document.getElementById('iip-lon').textContent  = `${simData.iipLon.toFixed(4)}°`;
-  document.getElementById('iip-prob').textContent = '< 1×10⁻⁷';
+  document.getElementById('iip-prob').textContent = 'NOT CALCULATED';
 
   const zc = simData.zone==='URBAN'    ? 'zone-urban'
            : simData.zone==='EXCLUSION' ? 'zone-exclusion'
@@ -3602,6 +3710,17 @@ function triggerFailureEvent() {
   setTimeout(()=>{ showMPLResults(result,simData); ensureCorridorOverlay(); }, 800);
 }
 
+
+function renderMPLComposition(result) {
+  const total=Math.max(1,result.MPL_TOTAL||0);
+  document.querySelectorAll('#mpl-component-chart [data-component]').forEach(row=>{
+    const key=row.dataset.component; const value=Number(result[key]||0);
+    const fill=row.querySelector('.mpl-component-fill'); const label=row.querySelector('.mpl-component-value');
+    if(fill) fill.style.width=`${Math.max(value>0?1:0,Math.min(100,value/total*100))}%`;
+    if(label) label.textContent=`${fmtUSD(value)} · ${(value/total*100).toFixed(1)}%`;
+  });
+  updateModelReceipt();
+}
 function showMPLResults(r,sim) {
   const t=sim.t,h=String(Math.floor(t/3600)).padStart(2,'0'),m=String(Math.floor((t%3600)/60)).padStart(2,'0'),s=String(Math.floor(t%60)).padStart(2,'0');
   const fmLabel=S.failModeIds.length?FMODES.filter(f=>S.failModeIds.includes(f.id)).map(f=>f.name).join(' / '):'Engine Failure';
@@ -3611,8 +3730,8 @@ function showMPLResults(r,sim) {
 
   // Compliance badge
   const cb=document.getElementById('mpl-compliance-badge');
-  cb.textContent=`ASA MPL — ${r.compliance}`;
-  cb.className=`compliance-badge ${r.compliance.includes('PASS')?'compliance-pass':r.compliance.includes('FAIL')?'compliance-fail':'compliance-review'}`;
+  cb.textContent=`MODEL CHECK — ${r.compliance}`;
+  cb.className='compliance-badge compliance-review';
 
   // Metrics
   document.getElementById('mr-phase').textContent=r.phase;
@@ -3626,6 +3745,7 @@ function showMPLResults(r,sim) {
   document.getElementById('mr-mpl-lou').textContent=fmtUSD(r.MPL_LOU);
   document.getElementById('mr-mpl-env').textContent=fmtUSD(r.MPL_ENV);
   document.getElementById('mr-mpl-total').textContent=fmtUSD(r.MPL_TOTAL);
+  renderMPLComposition(r);
 
   // Insurance recommendation row (add if element exists)
   const insEl = document.getElementById('mr-ins-req');
@@ -3659,7 +3779,7 @@ function showMPLResults(r,sim) {
       <div class="mpl-asset-row" style="border-left:2px solid ${riskColor};padding-left:7px;">
         <span class="mpl-asset-ico">${ico}</span>
         <div style="display:flex;flex-direction:column;min-width:0;">
-          <span class="mpl-asset-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${corridorPip}${a.name}</span>
+          <span class="mpl-asset-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${corridorPip}${escapeHTML(a.name)}</span>
           <span style="font-family:var(--font-mono);font-size:9px;color:var(--text4);">${a.dist_km} km · Δaz ${azStr}</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:80px;">
@@ -3743,7 +3863,7 @@ function logMissionRun(){
     RunStatus:'COMPLETE',
     LoggedToSheets:true, PDFExported:S.lastRun.pdfExported||false,
     AchillesBridgeRef:S.achillesRef||'',
-    Notes:`v0.1.0 | ${S.site?.short||'—'} | ${S.vehicle?.name||'—'} | ${r.compliance}`,
+    Notes:`v0.2.0 | ${S.site?.short||'—'} | ${S.vehicle?.name||'—'} | ${r.compliance}`,
     OperatorID:   S.activeOperator?.id   || 'OP-001',
     OperatorName: S.activeOperator?.name || 'N. Römer',
   };
@@ -3832,49 +3952,16 @@ async function writeAchillesW6(r) {
    Payload: standard run summary JSON.
 ═══════════════════════════════════════════════════════ */
 async function dispatchWebhook(runObj) {
-  const webhookUrl = S.webhookUrl || '';
-  if(!webhookUrl || !webhookUrl.startsWith('http')) return;
-
-  const r = runObj.result;
-  const payload = {
-    event:       'mpl_run_complete',
-    platform:    'Römer MPL v0.1.0',
-    runId:       runObj.runId,
-    timestamp:   runObj.timestamp,
-    operator:    { id: S.activeOperator?.id, name: S.activeOperator?.name },
-    site:        { id: S.site?.id, name: S.site?.name, cc: S.site?.cc },
-    vehicle:     { id: S.vehicle?.id, name: S.vehicle?.name },
-    transit:     S.transit?.id,
-    failTime_s:  runObj.failureTime,
-    phase:       r.phase,
-    zone:        r.zone,
-    mpl: {
-      casualties: Math.round(r.MPL_CAS),
-      property:   Math.round(r.MPL_PD),
-      lossOfUse:  Math.round(r.MPL_LOU),
-      environmental: Math.round(r.MPL_ENV),
-      total:      Math.round(r.MPL_TOTAL),
-      insurance:  Math.round(r.INS_REQ),
-    },
-    casualties:  r.CAS_total,
-    compliance:  r.compliance,
-    corridorAssets: (r.corridorHVAs||[]).filter(a=>a.inCorridor).length,
-    achillesRef: S.achillesRef || null,
-  };
-
-  try {
-    await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Romer-Event': 'mpl_run_complete' },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(6000),
-      mode: 'no-cors',  // allow cross-origin webhook without preflight requirement
-    });
-    toast(`✓ Webhook dispatched — ${S.activeOperator?.name || 'Operator'}`);
-  } catch(e) {
-    // Webhook failure is non-critical — log silently
-    console.warn('[Römer Webhook] dispatch failed:', e.message);
-  }
+  const webhookUrl=safeExternalUrl(S.webhookUrl||S.settings.webhookUrl||'');
+  if(!webhookUrl) return;
+  const r=runObj.result;
+  const payload={event:'mpl_run_complete',platform:'Römer MPL v0.2.0',model:{version:MODEL_META.version,hash:MODEL_META.modelHash,methodPublicationDate:MODEL_META.methodPublicationDate},
+    runId:runObj.runId,timestamp:runObj.timestamp,operator:{id:S.activeOperator?.id,name:S.activeOperator?.name},site:{id:S.site?.id,name:S.site?.name,cc:S.site?.cc},
+    vehicle:{id:S.vehicle?.id,name:S.vehicle?.name},transit:S.transit?.id,failTime_s:runObj.failureTime,phase:r.phase,zone:r.zone,
+    mpl:{casualties:Math.round(r.MPL_CAS),property:Math.round(r.MPL_PD),lossOfUse:Math.round(r.MPL_LOU),environmental:Math.round(r.MPL_ENV),total:Math.round(r.MPL_TOTAL),indicativeBuffer:Math.round(r.INS_REQ)},
+    casualties:r.CAS_total,modelCheck:r.compliance,corridorAssets:(r.corridorHVAs||[]).filter(a=>a.inCorridor).length,achillesRef:S.achillesRef||null};
+  try { const response=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json','X-Romer-Event':'mpl_run_complete'},body:JSON.stringify(payload),signal:AbortSignal.timeout(7000)}); if(!response.ok)throw new Error(`HTTP ${response.status}`); toast(`✓ Webhook acknowledged — HTTP ${response.status}`); }
+  catch(e){ console.warn('[Römer Webhook] delivery unverified:',e.message); toast(`Webhook attempted; no verified acknowledgement — ${e.message}`); }
 }
 
 /* Wire webhook into logMissionRun */
@@ -3904,7 +3991,7 @@ function clearFlightTimeline() {
 /* ─── Settings Import / Export ─── */
 function exportSettings() {
   const config = {
-    version: 'v0.1.0',
+    version: 'v0.2.0',
     exported: new Date().toISOString(),
     operator: S.activeOperator?.id || 'OP-001',
     settings: S.settings,
@@ -3946,7 +4033,7 @@ function importSettings() {
   inp.click();
 }
 
-// ─── PDF EXPORT — Full ASA-compliant report rendered as printable HTML ───
+// ─── PDF EXPORT — Full methodology-aligned screening report rendered as printable HTML ───
 function exportPDF() {
   if(!S.lastRun) { toast('Run a simulation first'); return; }
   const r = S.lastRun.result;
@@ -3990,8 +4077,8 @@ function exportPDF() {
   <div class="hd">
     <div>
       <div class="logo">RÖMER</div>
-      <div class="logo-sub">Maximum Probable Loss Platform — v0.1.0</div>
-      <div class="logo-sub" style="margin-top:1mm">RESTRICTED — REGULATORY USE ONLY</div>
+      <div class="logo-sub">Maximum Probable Loss Platform — v0.2.0</div>
+      <div class="logo-sub" style="margin-top:1mm">CONTROLLED MODEL OUTPUT — NOT FOR APPLICATION</div>
     </div>
     <div class="ref">
       <div>RUN ID: ${S.lastRun.runId}</div>
@@ -4003,7 +4090,7 @@ function exportPDF() {
 
   <h1>MPL Calculation Report — ${r.phase} Phase Mishap</h1>
 
-  <div class="compliance">ASA MPL — ${r.compliance}</div>
+  <div class="compliance">MODEL CHECK — ${r.compliance}</div>
 
   <h2>Mission Parameters</h2>
   <div class="grid">
@@ -4043,7 +4130,7 @@ function exportPDF() {
     <tr><th>Asset</th><th>Type</th><th>Distance</th><th>Bearing</th><th>Az Δ</th><th>Corridor</th><th>Prox. W</th><th style="text-align:right">Property Exposure</th></tr>
     ${(r.allAssets||r.nearbyAssets||[]).slice(0,10).map(a=>`
     <tr>
-      <td>${a.name}</td><td>${a.type||'—'}</td><td>${a.dist_km} km</td>
+      <td>${escapeHTML(a.name)}</td><td>${escapeHTML(a.type||'—')}</td><td>${a.dist_km} km</td>
       <td>${a.bear_deg!=null?a.bear_deg+'°':'—'}</td>
       <td>${a.azDelta!=null?a.azDelta+'°':'—'}</td>
       <td>${a.inCorridor?'▶':'·'}</td>
@@ -4074,7 +4161,7 @@ function exportPDF() {
   })()}
 
   <p class="asa">
-    This report is generated by the Römer MPL Platform v0.1.0 under the Australian Space Agency
+    This report is generated by the Römer MPL Platform v0.2.0 under the Australian Space Agency
     Maximum Probable Loss Methodology (2019). All monetary values are in Australian Dollars (AUD, 2024).
     MPL constants applied: CASUALTY_VALUE = $6,271,750; ENV_BOUNDING = $237,000;
     SECONDARY_MULT = 1.5; PROPERTY_PCT = 0.50; PROB_THRESHOLD = 1×10⁻⁷.
@@ -4087,6 +4174,7 @@ function exportPDF() {
   </div>
 
   <scr' + 'ipt>window.onload=()=>window.print();</' + 'script>
+<div id="mpl-build-marker" data-version="0.2.0" data-build="2026-08-05" hidden></div>
 </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html' });
@@ -5116,111 +5204,67 @@ function eciToScene(posVel) {
 }
 
 function initGlobe(){
-  // Guard against THREE.js CDN not loaded or WebGL unavailable
-  if(typeof THREE === 'undefined') {
-    console.warn('[Römer MPL] Three.js not loaded — globe unavailable, retrying in 2s');
-    setTimeout(()=>{ if(typeof THREE !== 'undefined') initGlobe(); },2000);
+  if(typeof THREE==='undefined') {
+    dataBadge('MAP LIBRARY RETRY','var(--orange)');
+    setTimeout(initGlobe,1800);
     return;
   }
   const canvas=document.getElementById('globe-canvas');
-  if(!canvas){ console.warn('[Römer MPL] Globe canvas not found'); return; }
-
-  // Measure the PARENT (globe-wrap) — it has flex-determined dimensions.
-  // canvas is position:absolute so its own BoundingClientRect is meaningless pre-init.
-  // Fallback: viewport minus panel(300) and both bars(topbar 48 + telebar 42 = 90).
-  const parent = canvas.parentElement;
-  let rect = parent.getBoundingClientRect();
-  const W = rect.width  > 10 ? Math.floor(rect.width)  : Math.max(400, window.innerWidth  - 300);
-  const H = rect.height > 10 ? Math.floor(rect.height) : Math.max(300, window.innerHeight - 90);
-  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-  renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  if(!canvas || renderer) { resizeGlobe(); return; }
+  const wrap=canvas.parentElement;
+  const rect=wrap.getBoundingClientRect();
+  const W=Math.max(320,Math.round(rect.width || window.innerWidth-300));
+  const H=Math.max(260,Math.round(rect.height || window.innerHeight-90));
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance',preserveDrawingBuffer:false});
+  renderer.setSize(W,H,false); renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2.25));
+  if('outputEncoding' in renderer) renderer.outputEncoding=THREE.sRGBEncoding;
+  if('toneMapping' in renderer) renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.shadowMap.enabled=true;
   scene=new THREE.Scene(); camera=new THREE.PerspectiveCamera(44,W/H,0.1,1000); camera.position.z=2.85;
 
-  // Stars — high count, varied sizes for depth
   const sg=new THREE.BufferGeometry(), sv=[], ss=[];
   for(let i=0;i<12000;i++){
     const t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=85+Math.random()*35;
     sv.push(r*Math.sin(p)*Math.cos(t),r*Math.sin(p)*Math.sin(t),r*Math.cos(p));
-    ss.push(Math.random() < 0.05 ? 0.18 : Math.random() < 0.2 ? 0.12 : 0.07);
+    ss.push(Math.random()<0.05?0.18:Math.random()<0.2?0.12:0.07);
   }
   sg.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
   sg.setAttribute('size',new THREE.Float32BufferAttribute(ss,1));
   stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.09,sizeAttenuation:true,transparent:true,opacity:0.65}));
   scene.add(stars);
 
-  // Globe with high-res canvas map (immediately visible)
   const mapTex=buildMapTexture();
   mapTex.anisotropy=renderer.capabilities.getMaxAnisotropy();
   mapTex.minFilter=THREE.LinearMipMapLinearFilter;
-  globe=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),new THREE.MeshPhongMaterial({
-    map:mapTex,
-    specularMap:mapTex,
-    specular:new THREE.Color(0x2a4060),
-    shininess:35,
-    emissive:new THREE.Color(0x040810),
-    emissiveIntensity:0.25,
+  if('encoding' in mapTex) mapTex.encoding=THREE.sRGBEncoding;
+  globe=new THREE.Mesh(new THREE.SphereGeometry(1,128,128),new THREE.MeshPhongMaterial({
+    map:mapTex,specularMap:mapTex,specular:new THREE.Color(0x2a4060),shininess:35,
+    emissive:new THREE.Color(0x040810),emissiveIntensity:0.25,
   }));
   scene.add(globe);
-
-  // Data overlay sphere (HVA markers, pop zones)
   buildDataOverlay();
 
-  // Atmosphere layers — 3 shells for realistic limb glow
-  const mkA=(r,c,o,s)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,48,48),new THREE.MeshPhongMaterial({color:c,transparent:true,opacity:o,side:s||THREE.BackSide,depthWrite:false}));scene.add(m);return m;};
-  atmoMesh=mkA(1.07,0x4fd1ff,0.07);
-  mkA(1.14,0x2255aa,0.04);
-  mkA(1.24,0x112244,0.025);
-
-  // Lights — directional sun with fill and ambient
+  const mkA=(r,c,o,s)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,64,64),new THREE.MeshPhongMaterial({color:c,transparent:true,opacity:o,side:s||THREE.BackSide,depthWrite:false}));scene.add(m);return m;};
+  atmoMesh=mkA(1.07,0x4fd1ff,0.07); mkA(1.14,0x2255aa,0.04); mkA(1.24,0x112244,0.025);
   scene.add(new THREE.AmbientLight(0x112233,0.85));
   const sun=new THREE.DirectionalLight(0xfff5e8,1.6); sun.position.set(5,3,5); scene.add(sun);
   const fill=new THREE.DirectionalLight(0x223355,0.3); fill.position.set(-4,-2,-4); scene.add(fill);
   const backFill=new THREE.DirectionalLight(0x001122,0.2); backFill.position.set(0,0,-5); scene.add(backFill);
 
-  buildTerminator();
-  buildGraticule3D();
-  buildConstellations();
-  addSiteMarkers3D();
-  addHVAMarkers3D();
-  setupMouse(canvas);
-
-  window.addEventListener('resize',()=>{
-    const _r=canvas.parentElement.getBoundingClientRect();
-    const W2=_r.width>10  ? Math.floor(_r.width)  : Math.max(400,window.innerWidth-300);
-    const H2=_r.height>10 ? Math.floor(_r.height) : Math.max(300,window.innerHeight-90);
-    renderer.setSize(W2,H2);camera.aspect=W2/H2;camera.updateProjectionMatrix();
-    if(globeDataMesh&&globeDataMesh.rotation) globeDataMesh.rotation.copy(globe.rotation);
-  });
-
-  // Re-measure once after a short delay to catch layout shift after splash fade
-  setTimeout(()=>{
-    const _r=canvas.parentElement.getBoundingClientRect();
-    if(_r.width>10&&_r.height>10){
-      renderer.setSize(Math.floor(_r.width),Math.floor(_r.height));
-      camera.aspect=_r.width/_r.height;
-      camera.updateProjectionMatrix();
-    }
-  }, 300);
-
+  buildTerminator(); buildGraticule3D(); buildConstellations(); addSiteMarkers3D(); addHVAMarkers3D(); setupMouse(canvas);
+  window.addEventListener('resize',resizeGlobe,{passive:true});
+  if('ResizeObserver' in window) {
+    S._globeResizeObserver?.disconnect?.();
+    S._globeResizeObserver=new ResizeObserver(()=>resizeGlobe());
+    S._globeResizeObserver.observe(wrap);
+  }
   setInterval(buildTerminator,60000);
-
-  // Progressive texture pipeline: L1 (canvas) → L2 (TopoJSON) → L3 (HD Blue Marble)
-  setTimeout(loadTopoJSONMap, 800);
-
-  // BC-006: GDP choropleth overlay (built after globe ready, visible only if setting on)
-  setTimeout(buildGDPOverlay, 1500);
-
-  // BC-007: Cloud layer mesh (async CDN load)
-  setTimeout(buildCloudLayer, 2000);
-
-  // Fetch live TLEs then add satellites
-  fetchLiveTLEs().then(()=>{
-    if(satRecords.length===0) initSatelliteRecords(EMBEDDED_TLES);
-    addSatellites3D();
-  });
-
+  setTimeout(loadTopoJSONMap,400);
+  setTimeout(buildGDPOverlay,1200);
+  setTimeout(buildCloudLayer,1800);
+  fetchLiveTLEs().then(()=>{ if(satRecords.length===0) initSatelliteRecords(EMBEDDED_TLES); addSatellites3D(); });
   animateGlobe();
+  requestAnimationFrame(resizeGlobe);
 }
 
 function addSiteMarkers3D(){
@@ -6182,7 +6226,7 @@ td{padding:2.5mm 4mm;border-bottom:1px solid #e8e8e8}
 .footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;font-size:8pt;color:#888;display:flex;justify-content:space-between}
 @media print{body{padding:10mm 14mm}}</style></head><body>
 <div class="hd">
-  <div><div class="logo">RÖMER INDUSTRIES</div><div style="font-size:8pt;color:#666;margin-top:2px">MPL PLATFORM v0.1.0 — PARAMETER SWEEP REPORT</div></div>
+  <div><div class="logo">RÖMER INDUSTRIES</div><div style="font-size:8pt;color:#666;margin-top:2px">MPL PLATFORM v0.2.0 — PARAMETER SWEEP REPORT</div></div>
   <div class="ref"><div>${now}</div><div>Site: ${S.site?.name||'—'} · Vehicle: ${S.vehicle?.name||'—'}</div><div>Sweep Axis: ${axisLabel}</div></div>
 </div>
 <h1>Parameter Sweep — ${sweepResults.length} Scenarios</h1>
@@ -6221,7 +6265,7 @@ async function runBatchAIAnalysis() {
   for(const r of batchResults.slice(0,6)){  // limit to 6 to manage tokens
     try {
       const prompt=`ASA MPL expert. Return JSON only: {"permit_likely":bool,"risk_level":"LOW"|"MEDIUM"|"HIGH"|"CRITICAL","key_issue":"one sentence","mitigation":"one mitigation"}
-Scenario: ${r.label} | MPL: AUD ${r.mpl.toLocaleString()} | CAS: ${r.cas} | Compliance: ${r.compliance} | Top HVA: ${r.nearestAsset} (W=${r.proxWeight})`;
+Scenario: ${r.label} | MPL: AUD ${r.mpl.toLocaleString()} | CAS: ${r.cas} | Model check: ${r.compliance} | Top HVA: ${r.nearestAsset} (W=${r.proxWeight})`;
       const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
       const data=await resp.json();
       const txt=data.content?.find(b=>b.type==='text')?.text||'{}';
@@ -6462,7 +6506,7 @@ async function logBatchToSheets() {
       CAS_Total:r.cas, Compliance:r.compliance,
       OperatorID:S.activeOperator?.id||'OP-001',
       OperatorName:S.activeOperator?.name||'N. Römer',
-      Notes:`v0.1.0 BATCH | ${r.label}`,
+      Notes:`v0.2.0 BATCH | ${r.label}`,
     }));
     await fetch(APPS_SCRIPT, {
       method:'POST',
@@ -6502,7 +6546,7 @@ MPL (AUD 2024):
 - Environmental: ${fmtUSD(r.MPL_ENV)}
 - TOTAL: ${fmtUSD(r.MPL_TOTAL)}
 - Insurance (110%): ${fmtUSD(r.INS_REQ)}
-- Compliance: ${r.compliance}
+- Model check: ${r.compliance}
 - Corridor HVAs: ${(r.corridorHVAs||[]).filter(a=>a.inCorridor).length} | Top: ${r.allAssets?.[0]?.name||'—'} W=${r.allAssets?.[0]?.proxWeight?.toFixed(3)||'—'}
 
 Return this exact JSON structure:
@@ -6606,7 +6650,7 @@ function shareMission() {
     veh:  S.vehicle?.id||'',
     mpl:  Math.round(r.MPL_TOTAL),
     ins:  Math.round(r.INS_REQ),
-    comp: r.compliance.includes('PASS')?'PASS':r.compliance.includes('FAIL')?'FAIL':'REVIEW',
+    comp: r.compliance.includes('UPPER')?'UPPER_REVIEW':r.compliance.includes('LOWER')?'LOWER_BAND':'REVIEW',
     cas:  r.CAS_total,
     ts:   Date.now(),
   });
@@ -6722,32 +6766,24 @@ function setView(v){
   document.getElementById('vbtn-g')?.classList.toggle('active',v==='globe');
   document.getElementById('vbtn-o')?.classList.toggle('active',v==='object');
   document.getElementById('vbtn-orbit')?.classList.toggle('active',v==='orbit');
-  const lv  = document.getElementById('launch-view');
-  const ov  = document.getElementById('orbit-view');
-
-  if(v==='orbit') {
-    if(ov) ov.style.display = '';
-    // Defer render until after display:'' has taken effect and the canvas has real dimensions
-    requestAnimationFrame(() => requestAnimationFrame(() => renderOrbitView()));
-    // Also set up 5s refresh if enabled
+  const lv=document.getElementById('launch-view');
+  const ov=document.getElementById('orbit-view');
+  if(ov) ov.style.display=v==='orbit'?'':'none';
+  if(v==='orbit'){
+    lv?.classList.remove('show');
+    requestAnimationFrame(()=>requestAnimationFrame(renderOrbitView));
     return;
   }
-
-  // Hide orbit view
-  if(ov) ov.style.display = 'none';
-
   if(v==='object'&&S.site){
-    lv.style.display='flex';setTimeout(()=>lv.classList.add('show'),10);
-    if(!lRenderer)initLaunchScene();
-    setTimeout(ensureCorridorOverlay,600);
+    if(lv){lv.style.display='flex';requestAnimationFrame(()=>lv.classList.add('show'));}
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!lRenderer)initLaunchScene();setTimeout(ensureCorridorOverlay,300);}));
   } else {
-    // Returning to globe — dismiss launch/results overlays and ping resize
-    lv.classList.remove('show');setTimeout(()=>lv.style.display='none',600);
-    document.getElementById('mpl-results').classList.remove('show');
-    setTimeout(()=>document.getElementById('mpl-results').style.display='none',500);
-    document.getElementById('iip-globe-marker').classList.remove('show');
-    // Ping resize so globe fills the container correctly after overlay is gone
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    lv?.classList.remove('show');
+    setTimeout(()=>{if(lv)lv.style.display='none';},600);
+    document.getElementById('mpl-results')?.classList.remove('show');
+    setTimeout(()=>{const el=document.getElementById('mpl-results');if(el)el.style.display='none';},500);
+    document.getElementById('iip-globe-marker')?.classList.remove('show');
+    requestAnimationFrame(resizeGlobe);
   }
 }
 
@@ -6769,9 +6805,8 @@ function setOrbitPlotMode(mode) {
 function renderOrbitView() {
   const cv = document.getElementById('orbit-canvas');
   if(!cv) return;
-  const _pr = cv.parentElement?.getBoundingClientRect();
-  const W = (_pr && _pr.width  > 10) ? _pr.width  : (cv.parentElement?.clientWidth  || 800);
-  const H = (_pr && _pr.height > 10) ? _pr.height : (cv.parentElement?.clientHeight || 500);
+  const W = cv.parentElement?.clientWidth || 800;
+  const H = cv.parentElement?.clientHeight || 500;
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   const bg = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H));
@@ -6958,29 +6993,28 @@ function setQuality(type, val) {
 }
 
 async function testWebhook() {
-  const url = document.getElementById('webhook-url-inp')?.value?.trim();
-  if(!url || !url.startsWith('http')) { toast('Enter a valid webhook URL first'); return; }
-  S.webhookUrl = url;
+  const raw=document.getElementById('webhook-url-inp')?.value?.trim();
+  const url=safeExternalUrl(raw);
+  if(!url){ toast('Webhook must be a public HTTPS URL'); return; }
+  if(!confirm(`Send a test payload to ${new URL(url).host}?`)) return;
+  S.webhookUrl=url;
   try {
-    await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Romer-Event':'webhook_test'},
-      body: JSON.stringify({ event:'webhook_test', platform:'Römer MPL v0.1.0', timestamp: new Date().toISOString() }),
-      mode:'no-cors', signal: AbortSignal.timeout(5000),
-    });
-    toast('✓ Webhook test dispatched (no-cors — check your endpoint for receipt)');
-  } catch(e) { toast(`Webhook test failed — ${e.message}`); }
+    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-Romer-Event':'webhook_test'},
+      body:JSON.stringify({event:'webhook_test',platform:'Römer MPL v0.2.0',modelHash:MODEL_META.modelHash,timestamp:new Date().toISOString()}),
+      signal:AbortSignal.timeout(7000)});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    toast(`✓ Webhook acknowledged — HTTP ${response.status}`);
+  } catch(e){ toast(`Webhook not verified — ${e.message}`); }
 }
 
 async function saveWebhookToSheet() {
-  const url = document.getElementById('webhook-url-inp')?.value?.trim();
-  if(!url) { toast('Enter a URL to save'); return; }
-  S.webhookUrl = url; S.settings.webhookUrl = url; saveSettings();
-  if(!APPS_SCRIPT) { toast('✓ Webhook URL saved locally (no Apps Script)'); return; }
-  try {
-    await fetch(APPS_SCRIPT, { method:'POST', body: JSON.stringify({ action:'webhook_register', webhookUrl: url }) });
-    toast('✓ Webhook URL saved to CF-022 in MPL Engine Sheet');
-  } catch(e) { toast('Saved locally — sheet write failed'); }
+  const raw=document.getElementById('webhook-url-inp')?.value?.trim();
+  const url=safeExternalUrl(raw);
+  if(!url){ toast('Webhook must be a public HTTPS URL'); return; }
+  S.webhookUrl=url; S.settings.webhookUrl=url; saveSettings();
+  if(!APPS_SCRIPT){ toast('✓ Webhook URL saved locally'); return; }
+  try { const response=await fetch(APPS_SCRIPT,{method:'POST',body:JSON.stringify({action:'webhook_register',webhookUrl:url})}); if(!response.ok)throw new Error(`HTTP ${response.status}`); toast('✓ Webhook URL saved to MPL configuration'); }
+  catch(e){ toast(`Saved locally; sheet acknowledgement unavailable — ${e.message}`); }
 }
 
 /* ─── Settings Toggle System — wires UI toggles to scene objects ─── */
@@ -7075,204 +7109,102 @@ function buildDebrisCone(siteLat, siteLon, alt_km) {
 
 /* ─── Sheets ─── */
 async function loadSheets(){
-  // Always pre-load embedded fallback data first
-  S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES; S.sheetsOk=false;
+  S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES;
+  S.operators=OPERATORS_DEFAULT; S.sheetsOk=false; S.dataErrors=[];
+  MODEL_META.dataMode='EMBEDDED_FALLBACK'; MODEL_META.dataTabs={};
+  dataBadge(APPS_SCRIPT?'CONNECTING':'EMBEDDED ONLY','var(--orange)');
+  if(!APPS_SCRIPT){ updateModelReceipt(); return; }
 
-  const badge = document.getElementById('sh-badge');
+  const requests={
+    sites:TAB_ALIASES.sites, vehicles:TAB_ALIASES.vehicles, constants:TAB_ALIASES.constants,
+    gdp:TAB_ALIASES.gdp, population:TAB_ALIASES.population, failureModes:TAB_ALIASES.failureModes,
+    config:TAB_ALIASES.config, operators:TAB_ALIASES.operators, assets:TAB_ALIASES.assets,
+    bridge:TAB_ALIASES.bridge
+  };
+  const settled=await Promise.allSettled(Object.entries(requests).map(async ([key,names])=>[key,await readSheetTab(names)]));
+  const data={};
+  settled.forEach(result=>{
+    if(result.status==='fulfilled') data[result.value[0]]=result.value[1];
+    else S.dataErrors.push(String(result.reason?.message||result.reason));
+  });
 
-  if(!APPS_SCRIPT) {
-    if(badge){ badge.textContent='NO SCRIPT URL'; badge.style.color='var(--orange)'; }
-    return;
-  }
+  const sites=data.sites?.rows||[];
+  const liveSites=sites.filter(r=>isTruthy(r.ActiveStatus??true)&&isTruthy(r.ShowInSelector??true))
+    .map(r=>({id:r.SiteID,name:r.SiteName||r.ShortName,short:r.ShortName||r.SiteName,cc:r.CountryCode||'GLB',
+      lat:finiteNumber(r.Latitude_dd,NaN),lon:finiteNumber(r.Longitude_dd,NaN),az:finiteNumber(r.NominalAzimuth_deg,90),
+      home:r.SiteID==='LS005',proposed:/PROPOSED/i.test(String(r.ActiveStatus||r.Notes||''))}))
+    .filter(r=>r.id&&Number.isFinite(r.lat)&&Number.isFinite(r.lon));
+  if(liveSites.length) S.sites=liveSites;
 
-  // Update badge to loading state
-  if(badge){ badge.textContent='LOADING…'; badge.style.color='var(--gold)'; }
+  const vehicles=data.vehicles?.rows||[];
+  const liveVehicles=vehicles.filter(r=>isTruthy(r.ActiveStatus??true)&&isTruthy(r.ShowInSelector??true))
+    .map(r=>({id:r.VehicleID,name:r.DisplayName||r.VehicleName,ico:'🚀',sub:r.Class||'Vehicle',
+      ac:finiteNumber(r.CasualtyArea_m2,0),mass:finiteNumber(r.MassLiftoff_kg??r.GrossLiftoffMass_kg,0),
+      stages:finiteNumber(r.Stages,1),propellant:r.PropellantType||'',expYield:finiteNumber(r.ExplosiveYield_TNT_equiv,0),
+      frags:finiteNumber(r.FragmentCount,0)})).filter(r=>r.id&&r.ac>0);
+  if(liveVehicles.length) S.vehicles=liveVehicles;
 
-  try {
-    // Fetch all config tabs in parallel — POST with read action
-    // (GET requests to Apps Script doPost() deployments do not work)
-    const tabs = ['02_Launch_Sites','01_Vehicles','04_MPL_Constants','05_GDP_Table',
-                  '06_Population_Zones','07_Failure_Modes','00_MPL_Config','08_Operators',
-                  '03_High_Value_Assets','09_BRIDGE_W5_Targets'];
-    const results = await Promise.allSettled(
-      tabs.map(tab =>
-        fetch(APPS_SCRIPT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'read', tab }),
-          signal: AbortSignal.timeout(8000)
-        }).then(r => r.json())
-      )
-    );
-    const [sr,vr,cr,gr,pzr,fmr,cfgr,opr,hvar,bwr] = results.map(r=>r.status==='fulfilled'?r.value:null);
-    // BC-001: sanitize all incoming rows before use
-    const cleanRows = res => res?.rows ? { ...res, rows: res.rows.map(sanitizeRow) } : res;
-    const [src,vrc,crc,grc,pzrc,fmrc,cfgrc,oprc,hvrc,bwrc] = [sr,vr,cr,gr,pzr,fmr,cfgr,opr,hvar,bwr].map(cleanRows);
+  (data.constants?.rows||[]).forEach(r=>{
+    const id=r.ConstantID; const val=finiteNumber(r.Value_AUD??r.Value??r.CurrentValue,NaN);
+    if(!Number.isFinite(val)) return;
+    if(id==='MC-001') ASA.CASUALTY_VALUE=val;
+    if(id==='MC-002') ASA.ENV_BOUNDING=val;
+    if(id==='MC-003') ASA.SECONDARY_MULT=val;
+    if(id==='MC-004') ASA.PROPERTY_PCT=val;
+    if(id==='MC-005') ASA.PROB_THRESHOLD=val;
+    if(id==='MC-006') ASA.UPRANGE_IA_M2=val;
+  });
+  (data.gdp?.rows||[]).forEach(r=>{const cc=r.CountryCode||r.ISO3;const v=finiteNumber(r.GDPPerCapita_USD??r.Value_USD,NaN);if(cc&&Number.isFinite(v))GDP_TABLE[cc]=v;});
 
-    // Sites
-    if(src?.rows) S.sites = src.rows
-      .filter(r=>r.ShowInSelector==='TRUE')
-      .map(r=>({id:r.SiteID,name:r.SiteName,short:r.ShortName,cc:r.CountryCode,
-        lat:+r.Latitude_dd,lon:+r.Longitude_dd,az:+r.NominalAzimuth_deg||90,home:r.SiteID==='LS005'}));
+  (data.population?.rows||[]).forEach(r=>{
+    const lat=finiteNumber(r.Latitude_dd,NaN),lon=finiteNumber(r.Longitude_dd,NaN);
+    if(!r.ZoneID||!Number.isFinite(lat)||!Number.isFinite(lon)) return;
+    const zone={id:r.ZoneID,name:r.ZoneName||r['ZoneName City']||r.ZoneID,cc:r.CountryCode||'GLB',raster:r.RasterType||'RURAL',
+      lat,lon,r:finiteNumber(r.RadiusKm,50),dens:finiteNumber(r.PopDensity_per_km2,0),gdp:finiteNumber(r.GDPperCapita_USD,GDP_TABLE.GLB),
+      col:r.OverlayColour||'rgba(255,216,77,0.15)'};
+    const idx=POP_ZONES.findIndex(p=>p.id===zone.id); if(idx>=0) POP_ZONES[idx]=zone; else POP_ZONES.push(zone);
+  });
 
-    // Vehicles
-    if(vrc?.rows) S.vehicles = vrc.rows
-      .filter(r=>r.ShowInSelector==='TRUE')
-      .map(r=>({id:r.VehicleID,name:r.DisplayName,ico:'🚀',sub:r.Class,
-        ac:+r.CasualtyArea_m2,mass:+r.GrossLiftoffMass_kg||0}));
+  const fms=(data.failureModes?.rows||[]).map(r=>({id:r.FailureModeID,name:r.FailureModeName,cat:r.Category||'Other',
+    casMult:finiteNumber(r.CasualtyAreaMultiplier,1),envMult:finiteNumber(r.EnvironmentalMultiplier,1)})).filter(r=>r.id);
+  if(fms.length) S.fmodes=fms;
 
-    // MPL Constants — override ASA values from sheet
-    if(crc?.rows) {
-      crc.rows.forEach(row => {
-        if(row.ConstantID==='MC-001') ASA.CASUALTY_VALUE = +row.Value_AUD || ASA.CASUALTY_VALUE;
-        if(row.ConstantID==='MC-002') ASA.ENV_BOUNDING   = +row.Value_AUD || ASA.ENV_BOUNDING;
-        if(row.ConstantID==='MC-003') ASA.SECONDARY_MULT = +row.Value     || ASA.SECONDARY_MULT;
-        if(row.ConstantID==='MC-004') ASA.PROPERTY_PCT   = +row.Value     || ASA.PROPERTY_PCT;
-      });
-    }
+  const ops=(data.operators?.rows||[]).filter(r=>isTruthy(r.ActiveStatus??true)).map(r=>({id:r.OperatorID,name:r.OperatorName||r.Name,
+    short:r.ShortCode||r.OperatorID,role:r.Role||'',email:r.Email||'',prefix:r.RunPrefix||String(r.OperatorID||'RMI').replace('OP-','RO'),colour:'var(--green)'})).filter(r=>r.id);
+  if(ops.length) S.operators=ops;
+  S.activeOperator=S.operators.find(o=>o.id==='OP-001')||S.operators[0];
 
-    // GDP Table
-    if(grc?.rows) grc.rows.forEach(row => { if(row.CountryCode) GDP_TABLE[row.CountryCode] = +row.GDPPerCapita_USD; });
+  (data.config?.rows||[]).forEach(r=>{
+    const id=r.ConfigID||r.SettingID; const val=r.Value??r.CurrentValue??'';
+    if(id==='CF-020') S.featAiAnalysis=isTruthy(val);
+    if(id==='CF-021') S.multiOperator=isTruthy(val);
+    if(id==='CF-022' && safeExternalUrl(val)) S.webhookUrl=safeExternalUrl(val);
+  });
 
-    // Population Zones — live runtime enrichment from sheet
-    // (POP_ZONES is fully embedded; sheet provides updates/corrections)
-    if(pzrc?.rows) {
-      pzrc.rows.filter(r=>r.Latitude_dd && r.Longitude_dd && r.RadiusKm).forEach(row => {
-        const id = row.ZoneID;
-        const existing = POP_ZONES.findIndex(p => p.id === id);
-        const zone = {
-          id, name: row.ZoneName || row['ZoneName City'] || id,
-          cc: row.CountryCode || 'GLB',
-          raster: row.RasterType || 'RURAL',
-          lat: +row.Latitude_dd, lon: +row.Longitude_dd,
-          r: +row.RadiusKm || 50,
-          dens: +row.PopDensity_per_km2 || 0,
-          gdp:  +row.GDPperCapita_USD   || GDP_TABLE.GLB,
-          col: row.OverlayColour ? `${row.OverlayColour.replace(')',`,${row.OverlayOpacity||0.15})`)}` : 'rgba(255,216,77,0.15)',
-        };
-        if(existing >= 0) POP_ZONES[existing] = zone;  // update
-        else POP_ZONES.push(zone);                       // add new
-      });
-      toast(`✓ POP_ZONES enriched from Sheet — ${POP_ZONES.length} zones active`);
-      // Rebuild data overlay with updated zones
-      if(scene && globeDataMesh) buildDataOverlay();
-    }
+  const assets=(data.assets?.rows||[]).filter(r=>isTruthy(r.ActiveStatus??true)&&isTruthy(r.ShowOnGlobe??true)).map(r=>({
+    id:r.AssetID,name:r.AssetName,type:r.AssetType||'Infrastructure',cc:r.CountryCode||'GLB',
+    lat:finiteNumber(r.Latitude_dd,NaN),lon:finiteNumber(r.Longitude_dd,NaN),
+    propPerM2:finiteNumber(r.PropertyValuePerM2,0),revPerM2:finiteNumber(r.RevenuePerM2,0),timeOut:finiteNumber(r.TimeOutOfUse_months,0),
+    envCost:finiteNumber(r.EnvCleanupCost_USD,0),toxic:isTruthy(r.ContainsToxicMaterials),footprint:finiteNumber(r.FootprintArea_m2,0),
+    markerColour:r.MarkerColour||'#FF9F43',markerIcon:r.MarkerIcon||'ASSET'
+  })).filter(a=>a.id&&Number.isFinite(a.lat)&&Number.isFinite(a.lon)&&a.footprint>=0);
+  if(assets.length){ HVA_LIBRARY.splice(0,HVA_LIBRARY.length,...assets); }
 
-    // Failure modes
-    if(fmrc?.rows) S.fmodes = fmrc.rows.map(r=>({
-      id:r.FailureModeID, name:r.FailureModeName, cat:r.Category,
-      casMult:+r.CasualtyAreaMultiplier||1.0, envMult:+r.EnvironmentalMultiplier||1.0
-    }));
+  if(data.bridge?.rows?.length) mergeAchillesRows(data.bridge.rows);
 
-    // 08_Operators — load operator profiles
-    if(oprc?.rows) {
-      S.operators = oprc.rows.map(row => ({
-        id:     row.OperatorID,
-        name:   row.OperatorName || row.Name,
-        short:  row.ShortCode    || row.OperatorID,
-        role:   row.Role         || '',
-        email:  row.Email        || '',
-        prefix: row.RunPrefix    || row.OperatorID?.replace('OP-','RO') || 'RMI',
-        colour: 'var(--green)',
-      })).filter(o => o.id);
-      if(!S.operators.length) S.operators = OPERATORS_DEFAULT;
-    } else {
-      S.operators = OPERATORS_DEFAULT;
-    }
-    // Default active operator to OP-001
-    if(!S.activeOperator) {
-      S.activeOperator = S.operators.find(o=>o.id==='OP-001') || S.operators[0];
-      renderOperatorBadge();
-    }
-    if(cfgrc?.rows) {
-      cfgrc.rows.forEach(row => {
-        const id = row.ConfigID || row.SettingID;
-        const val = row.Value || row.CurrentValue || '';
-        if(id==='CF-020' && val==='TRUE')  S.featAiAnalysis = true;
-        if(id==='CF-021' && val==='TRUE')  S.multiOperator  = true;
-        if(id==='CF-022' && val)           S.webhookUrl     = val;  // Webhook URL
-        // Additional CF overrides can be wired here as needed
-      });
-    }
-
-    // ── 03_High_Value_Assets — live HVA library (T-07: replaces embedded HVA_LIBRARY) ──
-    if(hvrc?.rows?.length) {
-      const liveHVAs = hvrc.rows.map(row => ({
-        id:         row.AssetID         || row.HVA_ID,
-        name:       row.AssetName       || row.Name,
-        type:       row.AssetType       || row.Type || 'Infrastructure',
-        cc:         row.CountryCode     || 'AUS',
-        lat:        +row.Latitude_dd    || 0,
-        lon:        +row.Longitude_dd   || 0,
-        propPerM2:  +row.PropValue_per_m2 || 1000,
-        revPerM2:   +row.RevLoss_per_m2   || 100,
-        timeOut:    +row.TimeOut_hrs      || 24,
-        envCost:    +row.EnvCost_AUD      || 500000,
-        toxic:      (row.ToxicHazard||'').toUpperCase()==='TRUE',
-        footprint:  +row.Footprint_m2     || 1000000,
-        col:        row.MapColour         || '#FF9F43',
-      })).filter(h => h.id && h.lat && h.lon);
-
-      if(liveHVAs.length) {
-        // Merge: update existing by ID, append new ones
-        liveHVAs.forEach(h => {
-          const idx = HVA_LIBRARY.findIndex(x=>x.id===h.id);
-          if(idx>=0) HVA_LIBRARY[idx]={...HVA_LIBRARY[idx],...h};
-          else HVA_LIBRARY.push(h);
-        });
-        // Rebuild globe data overlay with updated HVA positions
-        if(scene && globeDataMesh) setTimeout(buildDataOverlay, 200);
-        toast(`✓ HVA Library: ${liveHVAs.length} assets loaded from Sheet (03_High_Value_Assets)`);
-      }
-    }
-
-    // ── 09_BRIDGE_W5_Targets — ACHILLES bridge targets (replaces separate GET call) ──
-    if(bwrc?.rows?.length) {
-      const liveBridge = bwrc.rows.map(row => ({
-        id:           row.BridgeID,
-        objId:        row.ObjectID        || row.BridgeID,
-        name:         row.TargetName      || row.BridgeID,
-        sma:          +row.SMA_au         || 1.0,
-        ecc:          +row.Eccentricity   || 0.1,
-        inc:          +row.Inclination_deg|| 5,
-        diam:         +row.Diameter_km    || 0.5,
-        cls:          row.SpectralClass   || 'C',
-        dv:           +row.DeltaV_kms     || 4.5,
-        tof:          +row.TOF_days       || 180,
-        c3:           +row.C3_km2s2       || 10,
-        site:         row.LaunchSite      || 'LS005',
-        launchWindow: row.LaunchWindow    || '2027-Q1',
-        status:       row.Status          || 'AWAITING_MPL',
-        esa_pdi:      +row.ESA_PDI        || 0,
-        mass_Tg:      +row.Mass_Tg        || 0.1,
-      })).filter(t=>t.id);
-
-      if(liveBridge.length) {
-        liveBridge.forEach(t => {
-          const idx = ACHILLES_BRIDGE.findIndex(b=>b.id===t.id);
-          if(idx>=0) ACHILLES_BRIDGE[idx]={...ACHILLES_BRIDGE[idx],...t};
-          else ACHILLES_BRIDGE.push(t);
-        });
-        toast(`✓ ACHILLES Bridge: ${liveBridge.length} targets synced (09_BRIDGE_W5_Targets)`);
-      }
-    }
-
-    S.sheetsOk = true;
-    const badge = document.getElementById('sh-badge');
-    if(badge){ badge.textContent='CONNECTED'; badge.style.color='var(--green)'; }
-    const hvaCount = hvrc?.rows?.length || 0;
-    toast(`✓ Sheets loaded — 10 tabs · ${S.sites.length} sites · ${S.vehicles.length} vehicles · ${HVA_LIBRARY.length} HVAs`);
-
-  } catch(e) {
-    const badge = document.getElementById('sh-badge');
-    if(badge){ badge.textContent='ERROR'; badge.style.color='var(--red)'; }
-  }
+  S.sheetsOk=Object.keys(data).length>=6;
+  S.dataLoadedAt=new Date().toISOString();
+  MODEL_META.dataMode=S.sheetsOk?'LIVE_SHEETS':'PARTIAL_LIVE_WITH_FALLBACK';
+  dataBadge(S.sheetsOk?'LIVE · VERIFIED TABS':'PARTIAL · FALLBACK',S.sheetsOk?'var(--green)':'var(--orange)');
+  updateModelReceipt(); renderOperatorBadge(); renderSites(); renderVehicles?.();
+  if(scene){ buildDataOverlay(); addSiteMarkers3D(); addHVAMarkers3D(); }
+  toast(`Data sync: ${Object.keys(data).length}/10 tabs · ${S.sites.length} sites · ${S.vehicles.length} vehicles · ${HVA_LIBRARY.length} assets`);
 }
 
 async function logToSheets(data) {
   if(!APPS_SCRIPT){ toast('Sheets not connected — set APPS_SCRIPT URL (BC-002)'); return; }
   try {
-    await fetch(APPS_SCRIPT, { method:'POST', body:JSON.stringify({action:'append',tab:'10_Mission_Log',data}) });
+    await fetch(APPS_SCRIPT, { method:'POST', body:JSON.stringify({action:'append',tab:'Mission_Log',data}) });
     toast('✓ Run logged to Mission Record');
   } catch { toast('Sheet write failed — check Apps Script URL'); }
 }
@@ -7289,7 +7221,7 @@ async function uploadToDrive() {
       body: JSON.stringify({
         action:   'driveUpload',
         folderId: DRIVE_FOLDER,
-        filename: 'romer_mpl_v0.00.1.html',
+        filename: 'romer_mpl_v0.2.0.html',
         content:  html,
         mimeType: 'text/html',
       }),
@@ -7313,49 +7245,30 @@ async function uploadToDrive() {
 /* ─── Splash ─── */
 const SPLASH_STEPS=[{id:'li0',t:0},{id:'li1',t:500},{id:'li2',t:1050},{id:'li3',t:1650},{id:'li4',t:2200},{id:'li5',t:2750}];
 async function runSplash(){
-  // Always dismiss after 12s maximum — no matter what fails below
-  const emergencyExit = setTimeout(() => {
-    const sp=document.getElementById('splash'); if(sp) sp.classList.add('out');
-    const ap=document.getElementById('app');   if(ap) ap.classList.add('live');
+  let revealed=false;
+  const reveal=()=>{
+    if(revealed) return; revealed=true;
+    document.getElementById('splash')?.classList.add('out');
+    document.getElementById('app')?.classList.add('live');
+    setTimeout(()=>{const splash=document.getElementById('splash');if(splash)splash.style.display='none';},1100);
     startClock(); setupKeyboard();
-  }, 12000);
-
-  for(let i=0;i<SPLASH_STEPS.length;i++){
-    await wait(i===0?120:SPLASH_STEPS[i].t-SPLASH_STEPS[i-1].t);
-    if(i>0){const p=document.getElementById(SPLASH_STEPS[i-1].id);p.classList.remove('active');p.classList.add('done');}
-    document.getElementById(SPLASH_STEPS[i].id).classList.add('active');
-    document.getElementById('progress').style.width=((i+1)/SPLASH_STEPS.length*100)+'%';
-  }
-  loadSheets(); loadSettings();
-  await wait(3600);
-  document.getElementById(SPLASH_STEPS[SPLASH_STEPS.length-1].id).classList.add('done');
-
-  // bootApp calls initGlobe → THREE.js WebGLRenderer.
-  // If THREE hasn't loaded (CDN slow/blocked) or WebGL is unavailable,
-  // catch gracefully so the splash still dismisses.
+  };
+  const emergency=setTimeout(()=>{console.warn('[MPL boot] emergency reveal');reveal();},12000);
   try {
+    for(let i=0;i<SPLASH_STEPS.length;i++){
+      await wait(i===0?120:SPLASH_STEPS[i].t-SPLASH_STEPS[i-1].t);
+      if(i>0){const p=document.getElementById(SPLASH_STEPS[i-1].id);p?.classList.remove('active');p?.classList.add('done');}
+      document.getElementById(SPLASH_STEPS[i].id)?.classList.add('active');
+      const progress=document.getElementById('progress');if(progress)progress.style.width=((i+1)/SPLASH_STEPS.length*100)+'%';
+    }
+    loadSettings();
+    await Promise.race([loadSheets(),wait(7000)]);
+    document.getElementById(SPLASH_STEPS.at(-1).id)?.classList.add('done');
     bootApp();
-  } catch(e) {
-    console.warn('[Römer MPL] Boot error (non-fatal):', e.message);
-    // Try a degraded boot without globe
-    try {
-      S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES;
-      S.operators=OPERATORS_DEFAULT; S.activeOperator=OPERATORS_DEFAULT[0];
-      renderSites();
-      setTimeout(applySettings,800);
-      setTimeout(renderOperatorBadge,600);
-      setTimeout(fetchLiveGDP,2000);
-      setTimeout(fetchAchillesBridge,3000);
-      readShareHash();
-    } catch(e2) { console.warn('[Römer MPL] Degraded boot also failed:', e2.message); }
-  }
-
-  clearTimeout(emergencyExit);
-  await wait(200);
-  document.getElementById('splash').classList.add('out');
-  document.getElementById('app').classList.add('live');
-  startClock(); setupKeyboard();
-  setTimeout(()=>{document.getElementById('kbd-hints').classList.add('show');setTimeout(()=>document.getElementById('kbd-hints').classList.remove('show'),4000);},1200);
+    await wait(180); reveal();
+    setTimeout(()=>{document.getElementById('kbd-hints')?.classList.add('show');setTimeout(()=>document.getElementById('kbd-hints')?.classList.remove('show'),4000);},1200);
+  } catch(error){ console.error('[MPL boot] degraded mode',error); try{bootApp();}catch{} reveal(); }
+  finally { clearTimeout(emergency); }
 }
 
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -7443,52 +7356,26 @@ function removeCustomVehicle(idx) {
    Fetches live BW5 targets from 09_BRIDGE_W5_Targets tab.
    Falls back to ACHILLES_BRIDGE embedded if fetch fails.
 ════════════════════════════════════════════════════════ */
+
+function mergeAchillesRows(rows) {
+  const live=rows.map(row=>{
+    const sr=sanitizeRow(row);
+    return {id:sr.BridgeID,objId:sr.ObjectID||sr.BridgeID,name:sr.TargetName||sr.BridgeID,
+      sma:finiteNumber(sr.SMA_au,1),ecc:finiteNumber(sr.Eccentricity,.1),inc:finiteNumber(sr.Inclination_deg,5),
+      diam:finiteNumber(sr.Diameter_km,.5),cls:sr.SpectralClass||'C',dv:finiteNumber(sr.DeltaV_kms,4.5),
+      tof:finiteNumber(sr.TOF_days,180),c3:finiteNumber(sr.C3_km2s2,10),site:sr.LaunchSite||'LS005',
+      launchWindow:sr.LaunchWindow||'TBD',status:sr.Status||'PLANNING',esa_pdi:finiteNumber(sr.ESA_PDI,0),mass_Tg:finiteNumber(sr.Mass_Tg,.1)};
+  }).filter(t=>t.id);
+  live.forEach(t=>{const idx=ACHILLES_BRIDGE.findIndex(b=>b.id===t.id);if(idx>=0)ACHILLES_BRIDGE[idx]={...ACHILLES_BRIDGE[idx],...t};else ACHILLES_BRIDGE.push(t);});
+  return live.length;
+}
 async function fetchAchillesBridge() {
   if(!APPS_SCRIPT) return;
   try {
-    // Must use POST with action:'read' — Apps Script doPost() only (doGet returns health JSON only)
-    const r = await fetch(APPS_SCRIPT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'read', tab: '09_BRIDGE_W5_Targets' }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if(!r.ok) return;
-    const data = await r.json();
-    if(!data?.rows?.length) return;
-
-    const live = data.rows.map(row => {
-      const sr = sanitizeRow(row);
-      return {
-        id:           sr.BridgeID,
-        objId:        sr.ObjectID        || sr.BridgeID,
-        name:         sr.TargetName      || sr.BridgeID,
-        sma:          +sr.SMA_au         || 1.0,
-        ecc:          +sr.Eccentricity   || 0.1,
-        inc:          +sr.Inclination_deg|| 5,
-        diam:         +sr.Diameter_km    || 0.5,
-        cls:          sr.SpectralClass   || 'C',
-        dv:           +sr.DeltaV_kms     || 4.5,
-        tof:          +sr.TOF_days       || 180,
-        c3:           +sr.C3_km2s2       || 10,
-        site:         sr.LaunchSite      || 'LS005',
-        launchWindow: sr.LaunchWindow    || '2027-Q1',
-        status:       sr.Status          || 'AWAITING_MPL',
-        esa_pdi:      +sr.ESA_PDI        || 0,
-        mass_Tg:      +sr.Mass_Tg        || 0.1,
-      };
-    }).filter(t=>t.id);
-
-    if(live.length) {
-      // Merge: keep embedded for any IDs not in sheet, add sheet data
-      live.forEach(t => {
-        const idx = ACHILLES_BRIDGE.findIndex(b=>b.id===t.id);
-        if(idx>=0) ACHILLES_BRIDGE[idx]={...ACHILLES_BRIDGE[idx],...t};
-        else ACHILLES_BRIDGE.push(t);
-      });
-      toast(`✓ ACHILLES bridge: ${live.length} targets synced from sheet`);
-    }
-  } catch(e) { /* silent — embedded fallback remains */ }
+    const result=await readSheetTab(TAB_ALIASES.bridge,8000);
+    const count=mergeAchillesRows(result.rows);
+    if(count) toast(`✓ ACHILLES bridge: ${count} targets synced from ${result.tab}`);
+  } catch(e) { console.warn('[MPL bridge] fallback retained:',e.message); }
 }
 
 /* ════════════════════════════════════════════════════════
@@ -7523,7 +7410,7 @@ function renderRunsPanel() {
   }
   panel.innerHTML = filterBar + filtered.map(r=>{
     const comp=r.result?.compliance||'';
-    const col=comp.includes('PASS')?'var(--green)':comp.includes('FAIL')?'var(--red)':'var(--gold)';
+    const col=comp.includes('UPPER')?'var(--red)':comp.includes('LOWER')?'var(--green)':'var(--gold)';
     const op=S.operators?.find(o=>o.id===r.operator);
     return `<div class="u-card" style="margin-bottom:6px;">
       <div class="u-flex-sb" style="margin-bottom:4px;">
@@ -7566,7 +7453,7 @@ function buildGDPOverlay() {
 async function buildGDPChoropleth() {
   if(gdpOverlayMesh){ scene.remove(gdpOverlayMesh); gdpOverlayMesh=null; }
   if(!scene) return;
-  const W=2048,H=1024;
+  const W=4096,H=2048;
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H);
@@ -7759,17 +7646,15 @@ function ensureCorridorOverlay() {
 }
 
 function bootApp(){
-  S.sites=SITES; S.vehicles=VEHICLES; S.transits=TRANSITS; S.fmodes=FMODES;
-  S.operators=OPERATORS_DEFAULT; S.activeOperator=OPERATORS_DEFAULT[0];
-  renderSites();
-  // Delay initGlobe 150ms — browser must complete layout before getBoundingClientRect() reads correctly
-  setTimeout(initGlobe, 150);
-  setTimeout(applySettings, 1200);
-  setTimeout(renderOperatorBadge, 800);
-  setTimeout(fetchLiveGDP, 3000);
-  // fetchAchillesBridge now runs inside loadSheets() 10-tab POST batch — no separate call
-  setTimeout(fetchLivePopDensity, 5000);
-  setTimeout(fetchJPLHorizons, 7000);
+  if(!S.sites.length) S.sites=SITES;
+  if(!S.vehicles.length) S.vehicles=VEHICLES;
+  if(!S.transits.length) S.transits=TRANSITS;
+  if(!S.fmodes.length) S.fmodes=FMODES;
+  if(!S.operators.length) S.operators=OPERATORS_DEFAULT;
+  if(!S.activeOperator) S.activeOperator=S.operators.find(o=>o.id==='OP-001')||S.operators[0];
+  renderSites(); initGlobe(); computeModelHash(); updateModelReceipt();
+  setTimeout(applySettings,900); setTimeout(renderOperatorBadge,500);
+  setTimeout(fetchLiveGDP,2500); setTimeout(fetchLivePopDensity,4200); setTimeout(fetchJPLHorizons,6200);
   readShareHash();
 }
 window.addEventListener('load',runSplash);
