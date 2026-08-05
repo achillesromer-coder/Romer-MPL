@@ -1,0 +1,69 @@
+name: MPL v0.2.0 Drive Sync
+
+on:
+  push:
+    branches:
+      - mpl/v0.2.0-live-repair-2026-08-05
+    paths:
+      - .github/workflows/mpl-v020-drive-sync.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-validate-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/v0.2.0-live-repair-2026-08-05
+          fetch-depth: 0
+
+      - name: Download controlled Drive build
+        run: |
+          curl --fail --location --retry 3 \
+            'https://drive.usercontent.google.com/download?id=11no0F0hjEHdBXTiqyzNOvuwZZDoygrmf&export=download&confirm=t' \
+            --output /tmp/index.html
+          test "$(stat -c%s /tmp/index.html)" -eq 433682
+          echo '23493997f40ad47251e8b0667410fbf304e1bd12e5edc40edba7ebaeecd42513  /tmp/index.html' | sha256sum --check
+
+      - name: Validate HTML and JavaScript release gates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import collections, re
+          source = Path('/tmp/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', source, re.S)
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1], encoding='utf-8')
+          class IDs(HTMLParser):
+              def __init__(self): super().__init__(); self.values=[]
+              def handle_starttag(self, tag, attrs):
+                  self.values += [v for k,v in attrs if k == 'id' and v]
+          parser=IDs(); parser.feed(source)
+          duplicates=[k for k,v in collections.Counter(parser.values).items() if v > 1]
+          assert not duplicates, duplicates
+          assert len(re.findall(r'const\s+TRANSITS\s*=', source)) == 1
+          assert len(re.findall(r'const\s+FMODES\s*=', source)) == 1
+          assert len(re.findall(r'function\s+calculateMPL\s*\(', source)) == 1
+          assert 'no-cors' not in source
+          assert '< 1×10⁻⁷' not in source
+          assert 'ASA-compliant' not in source
+          assert 'data-version="0.2.0"' in source
+          PY
+          node --check /tmp/mpl-inline.js
+
+      - name: Replace canonical Git source
+        run: |
+          cp /tmp/index.html index.html
+          git diff --check
+          git config user.name 'Römer MPL Release Bot'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'index.html already synchronized'
+          else
+            git commit -m 'Repair MPL engine map, live data contract, and visual receipts'
+            git push origin HEAD:mpl/v0.2.0-live-repair-2026-08-05
+          fi
