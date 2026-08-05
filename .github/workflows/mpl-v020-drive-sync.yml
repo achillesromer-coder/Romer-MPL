@@ -6,6 +6,9 @@ on:
       - mpl/v0.2.0-live-repair-2026-08-05
     paths:
       - .github/workflows/mpl-v020-drive-sync.yml
+      - tests/**
+      - tools/**
+      - index.html
   pull_request:
     branches:
       - main
@@ -56,6 +59,21 @@ jobs:
           assert 'data-version="0.2.0"' in source
           PY
           node --check /tmp/mpl-inline.js
+
+      - name: Run detector regression suite
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Run calculation and live-tab smoke suite
+        run: node tests/mpl_runtime_smoke.js /tmp/index.html
+
+      - name: Produce static audit receipt
+        run: |
+          python tools/mpl_static_audit.py /tmp/index.html --output /tmp/mpl-audit.json
+          python - <<'PY'
+          import json
+          receipt=json.load(open('/tmp/mpl-audit.json'))
+          print(json.dumps({k:receipt[k] for k in ('sha256','line_count','release_gate','finding_count','severity_counts')},indent=2))
+          PY
 
       - name: Replace canonical Git source
         run: |
