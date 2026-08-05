@@ -33,4 +33,9 @@
 - Static release audit: `REVIEW`, `0 findings`, no blockers
 - Live deployment identity: passed
 
+## Canonical workbook receipts
+
+- `Changelog`: `CL-018` — application release and final SHA-256
+- `Audit_Trail`: `AUD-008` — GitHub, Drive and live-route execution receipt
+
 The public Squarespace route and its embedded GitHub Pages application were independently fetched by GitHub Actions on 5 August 2026. The embedded application was byte-for-byte identical to the controlled Drive release.
