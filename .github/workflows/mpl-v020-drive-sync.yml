@@ -6,6 +6,9 @@ on:
       - mpl/v0.2.0-live-repair-2026-08-05
     paths:
       - .github/workflows/mpl-v020-drive-sync.yml
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
