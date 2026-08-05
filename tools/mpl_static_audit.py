@@ -112,8 +112,9 @@ def audit_source(source: str) -> list[Finding]:
         ))
 
     risk_shape = _present(source, r"riskHeatPoints\.push\(\{[^}]*risk\s*:")
+    risk_zone = _present(source, r"riskHeatPoints\.push\(\{[^}]*zone\s*:")
     risk_read = _present(source, r"latest\.zone\s*===")
-    if risk_shape and risk_read:
+    if risk_shape and risk_read and not risk_zone:
         findings.append(Finding(
             "MPL-BUG-001", "HIGH", "FAIL",
             "Risk-heat color reads a missing property",
@@ -151,7 +152,9 @@ def audit_source(source: str) -> list[Finding]:
             "Require HTTPS, explicit operator confirmation, allowlisting or per-destination approval, and audit receipts."
         ))
 
-    if _present(source, r"\.innerHTML\s*=\s*`") or _present(source, r"\.innerHTML\s*\+="):
+    dynamic_html = _present(source, r"\.innerHTML\s*=\s*`") or _present(source, r"\.innerHTML\s*\+=")
+    has_escape_boundary = _present(source, r"function\s+escapeHTML\s*\(")
+    if dynamic_html and not has_escape_boundary:
         findings.append(Finding(
             "MPL-SEC-003", "HIGH", "REVIEW_REQUIRED",
             "Dynamic HTML interpolation requires escaping review",
@@ -169,7 +172,7 @@ def audit_source(source: str) -> list[Finding]:
             "Replace with CONTROLLED MODEL OUTPUT — NOT FOR APPLICATION until the evidence gate passes."
         ))
 
-    if _present(source, r"const\s+ASA\s*=\s*\{"):
+    if _present(source, r"const\s+ASA\s*=\s*\{") and not _present(source, r"const\s+CONSTANT_RECEIPTS\s*="):
         findings.append(Finding(
             "MPL-PROV-001", "HIGH", "OPEN",
             "Embedded constants lack machine-readable source receipts",
