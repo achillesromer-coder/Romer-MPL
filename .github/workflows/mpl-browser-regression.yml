@@ -1,0 +1,41 @@
+name: MPL Browser Globe Regression
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-globe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Probe public globe runtime
+        id: probe
+        continue-on-error: true
+        run: node tests/browser_globe_probe.mjs
+
+      - name: Upload browser receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpl-browser-globe-${{ github.sha }}
+          path: artifacts/browser-globe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce globe regression gate
+        if: steps.probe.outcome != 'success'
+        run: |
+          echo 'Front-facing globe runtime regression detected.' >&2
+          cat artifacts/browser-globe/summary.json || true
+          exit 1
