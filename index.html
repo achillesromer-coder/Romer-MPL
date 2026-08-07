@@ -5233,6 +5233,9 @@ function initGlobe(){
   canvas.dataset.webgl='ready';
   canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
   canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
+  canvas.dataset.webgl='ready';
+  canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
+  canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
   if('outputEncoding' in renderer) renderer.outputEncoding=THREE.sRGBEncoding;
   if('toneMapping' in renderer) renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.shadowMap.enabled=true;
