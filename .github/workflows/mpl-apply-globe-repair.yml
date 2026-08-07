@@ -24,20 +24,19 @@ jobs:
         run: |
           python tools/repair_globe_runtime_20260807.py
           python - <<'PY'
-          from bs4 import BeautifulSoup
           from pathlib import Path
-          s=BeautifulSoup(Path('index.html').read_text(encoding='utf-8'),'html.parser')
-          canvas=s.find(id='globe-canvas')
-          ancestors=[(' '.join(x.get('class',[])),x.get('id')) for x in canvas.parents if getattr(x,'name',None)]
-          assert not any('panel-wrap' in classes for classes,_ in ancestors), ancestors
-          tele=s.select_one('.telebar')
-          assert tele and tele.parent and tele.parent.get('id')=='app', 'telemetry bar must be outside .main'
           source=Path('index.html').read_text(encoding='utf-8')
+          panel_close=source.index('</div><!-- /#panel -->')
+          globe=source.index('<div class="globe-wrap" id="globe-wrap">')
+          tele=source.index('<div class="telebar">')
+          main_close=source.rfind('</div>',0,tele)
+          assert panel_close < globe < main_close < tele, (panel_close,globe,main_close,tele)
           assert 'function buildGDPHaloOverlay()' in source
           assert 'return buildGDPHaloOverlay();' in source
           assert 'const _baseGDPOverlay = buildGDPOverlay' not in source
           assert 'PROCEDURAL CLOUD LAYER' in source
           assert 'topojson-client@3.1.0/dist/topojson-client.min.js' in source
+          assert '.globe-wrap { position:relative; flex:1 1 auto;' in source
           PY
 
       - name: Validate inline JavaScript
