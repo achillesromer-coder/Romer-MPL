@@ -139,7 +139,7 @@ body {
    APP SHELL
 ═══════════════════════════════════════════ */
 #app {
-  display: flex; flex-direction: column; height: 100vh; min-height: 100%;
+  display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 100%;
   opacity: 0; transition: opacity 0.7s ease;
 }
 #app.live { opacity: 1; }
@@ -999,7 +999,10 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #globe-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
-.globe-wrap { position:relative; min-width:0; min-height:0; contain:layout paint; }
+.main { flex:1 1 auto; min-width:0; min-height:0; }
+.panel-wrap { height:100%; min-height:0; }
+.panel { height:100%; min-height:0; }
+.globe-wrap { position:relative; flex:1 1 auto; min-width:0; min-height:0; height:100%; contain:layout paint; }
 .mpl-model-notice { padding:8px 10px; margin:0 0 10px; border:1px solid rgba(255,216,77,.22); border-radius:var(--r-sm); background:rgba(255,216,77,.06); font-family:var(--font-mono); font-size:8px; line-height:1.45; color:var(--text3); letter-spacing:.04em; }
 .mpl-component-chart { display:grid; gap:6px; padding:10px 12px; margin:0 0 14px; border:1px solid var(--border); border-radius:var(--r); background:rgba(17,22,29,.72); }
 .mpl-component-row { display:grid; grid-template-columns:92px 1fr 82px; gap:8px; align-items:center; }
@@ -1009,6 +1012,47 @@ body {
 .mpl-component-fill { display:block; height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg,var(--blue),var(--gold),var(--orange)); transition:width .65s cubic-bezier(.16,1,.3,1); }
 .mpl-receipt { display:flex; flex-wrap:wrap; gap:5px 10px; padding:7px 10px; margin-bottom:12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size:8px; color:var(--text4); }
 .mpl-receipt strong { color:var(--text3); font-weight:500; }
+
+/* MPL RESPONSIVE GLOBE HOTFIX — 2026-08-07 */
+@media (max-width:760px) {
+  .topbar { padding:0 10px; }
+  .tb-mission,.tb-sep,.utc-clock { display:none; }
+  .main { position:relative; }
+  .panel-wrap {
+    position:absolute !important; inset:0 auto 0 0;
+    width:min(300px,84vw); height:100%; z-index:45;
+    pointer-events:none;
+  }
+  .panel-wrap .panel {
+    width:100%; height:100%; pointer-events:auto;
+    box-shadow:18px 0 48px rgba(0,0,0,.38);
+  }
+  .panel-collapse-btn { pointer-events:auto; }
+  .panel-wrap:has(.panel.collapsed) .panel-collapse-btn { right:auto; left:0; }
+  .globe-wrap { flex:1 1 100%; width:100%; height:100%; }
+  .view-toggles { top:8px; right:8px; max-width:calc(100vw - 20px); }
+  .view-btn { padding:5px 8px; font-size:9px; }
+  .globe-legend { top:48px; right:8px; max-width:calc(100vw - 20px); }
+  .globe-ctrl { left:8px; bottom:66px; }
+  .zoom-indicator { right:8px; bottom:66px; }
+  .compass { right:48px; bottom:72px; }
+  #globe-hint,.kbd-hints { display:none; }
+  .telebar { height:48px; padding:0 8px; overflow-x:auto; scrollbar-width:none; }
+  .telebar::-webkit-scrollbar { display:none; }
+  .tele-item { padding:0 8px; flex:0 0 auto; }
+  .tele-right { position:sticky; right:0; flex:0 0 auto; padding-left:8px; background:var(--bg1); }
+  .tele-btn { white-space:nowrap; }
+}
+@media (max-width:520px) {
+  .tb-version { display:none; }
+  .tb-logo { font-size:11px; }
+  .live-badge { padding:3px 7px; font-size:8px; }
+  .icon-btn { width:28px; height:28px; }
+  .panel-wrap { width:min(300px,88vw); }
+  .view-btn { padding:5px 6px; font-size:8px; }
+  .tele-item:nth-child(2),.tele-item:nth-child(5),.tele-item:nth-child(6) { display:none; }
+}
+
 </style>
 </head>
 <body>
@@ -1325,6 +1369,7 @@ body {
         <button class="btn-sec" onclick="openSweep()">⇄ Parameter Sweep</button>
         <button class="btn-sec" onclick="goStep(2)">← Back</button>
       </div>
+    </div><!-- /#panel -->
     <!-- Panel collapse toggle -->
     <button class="panel-collapse-btn" id="panel-toggle" onclick="togglePanel()" title="Collapse panel">‹</button>
     </div>
@@ -2032,7 +2077,7 @@ body {
 <!-- satellite.js for real TLE propagation -->
 <script src="https://cdn.jsdelivr.net/npm/satellite.js@4.1.3/dist/satellite.min.js"></script>
 <!-- TopoJSON client for Natural Earth vector map -->
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
 <style>
 /* ─── Geocoding Search ─── */
@@ -4634,6 +4679,12 @@ function buildDataOverlay(){
 
 async function loadTopoJSONMap() {
   const badge = document.getElementById('globe-hd-badge');
+  if(typeof topojson === 'undefined') {
+    console.warn('[MPL map] TopoJSON client unavailable; retaining deterministic procedural map.');
+    if(badge){ badge.textContent='PROCEDURAL MAP · VECTOR ENRICHMENT UNAVAILABLE'; badge.classList.add('show'); setTimeout(()=>badge.classList.remove('show'),2200); }
+    setTimeout(loadHDGlobeTexture, 200);
+    return;
+  }
   if(badge){ badge.textContent='LOADING VECTOR MAP…'; badge.classList.add('show'); }
 
   // ── L2a: 50m land polygons (primary, ~1.2MB — recognisable coastlines) ──
@@ -5217,6 +5268,21 @@ function initGlobe(){
   const H=Math.max(260,Math.round(rect.height || window.innerHeight-90));
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance',preserveDrawingBuffer:false});
   renderer.setSize(W,H,false); renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2.25));
+  canvas.dataset.webgl='ready';
+  canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
+  canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
+  canvas.dataset.webgl='ready';
+  canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
+  canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
+  canvas.dataset.webgl='ready';
+  canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
+  canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
+  canvas.dataset.webgl='ready';
+  canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
+  canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
+  canvas.dataset.webgl='ready';
+  canvas.addEventListener('webglcontextlost',()=>{canvas.dataset.webgl='lost';dataBadge('WEBGL CONTEXT LOST','var(--red)');},{passive:true});
+  canvas.addEventListener('webglcontextrestored',()=>{canvas.dataset.webgl='restored';dataBadge('WEBGL RESTORED','var(--green)');requestAnimationFrame(resizeGlobe);},{passive:true});
   if('outputEncoding' in renderer) renderer.outputEncoding=THREE.sRGBEncoding;
   if('toneMapping' in renderer) renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.shadowMap.enabled=true;
@@ -6682,7 +6748,7 @@ function readShareHash() {
 ════════════════════════════════════════════════════════ */
 let gdpOverlayMesh = null;
 
-function buildGDPOverlay() {
+function buildGDPHaloOverlay() {
   if(gdpOverlayMesh){ scene.remove(gdpOverlayMesh); gdpOverlayMesh=null; }
   if(!scene) return;
   const W=2048, H=1024;
@@ -6736,25 +6802,39 @@ function buildGDPOverlay() {
 ════════════════════════════════════════════════════════ */
 let cloudMesh = null;
 function buildCloudLayer() {
-  if(cloudMesh){ scene.remove(cloudMesh); cloudMesh=null; }
-  if(!scene) return;
-  const CLOUD_URLS = [
-    'https://raw.githubusercontent.com/turban/webgl-earth/master/images/fair_clouds_4k.jpg',
-    'https://unpkg.com/three-globe@2.31.0/example/img/earth-clouds.png',
-  ];
-  const loader=new THREE.TextureLoader();
-  const tryCloud=(idx)=>{
-    if(idx>=CLOUD_URLS.length) return;
-    loader.load(CLOUD_URLS[idx], tex=>{
-      const mat=new THREE.MeshPhongMaterial({map:tex,transparent:true,opacity:0.28,depthWrite:false,side:THREE.FrontSide});
-      cloudMesh=new THREE.Mesh(new THREE.SphereGeometry(1.018,48,48),mat);
-      cloudMesh.visible = S.settings.clouds===true;
-      scene.add(cloudMesh);
-      // Slow rotation offset for drift effect
-      cloudMesh.userData.cloudDrift=true;
-    }, undefined, ()=>tryCloud(idx+1));
-  };
-  tryCloud(0);
+  if(cloudMesh){ scene.remove(cloudMesh); cloudMesh.geometry?.dispose?.(); cloudMesh.material?.map?.dispose?.(); cloudMesh.material?.dispose?.(); cloudMesh=null; }
+  if(!scene || typeof THREE==='undefined') return;
+
+  // PROCEDURAL CLOUD LAYER — no remote texture or CORS dependency.
+  // A seeded generator keeps screenshots and mission receipts deterministic.
+  const W=2048,H=1024,cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d'); ctx.clearRect(0,0,W,H);
+  let seed=0x524f4d45;
+  const rand=()=>{ seed=(1664525*seed+1013904223)>>>0; return seed/4294967296; };
+  ctx.globalCompositeOperation='lighter';
+  for(let band=0;band<9;band++){
+    const centreY=H*(0.12+band*0.095)+(rand()-.5)*55;
+    const clusters=24+Math.floor(rand()*18);
+    for(let c=0;c<clusters;c++){
+      const cx=rand()*W, cy=centreY+(rand()-.5)*150;
+      const rx=35+rand()*130, ry=8+rand()*32;
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,rx);
+      const alpha=0.035+rand()*0.055;
+      g.addColorStop(0,`rgba(230,242,255,${alpha})`);
+      g.addColorStop(0.45,`rgba(210,232,250,${alpha*.62})`);
+      g.addColorStop(1,'rgba(190,220,245,0)');
+      ctx.save(); ctx.translate(cx,cy); ctx.scale(1,ry/rx); ctx.beginPath(); ctx.arc(0,0,rx,0,Math.PI*2); ctx.restore();
+      ctx.fillStyle=g; ctx.fill();
+    }
+  }
+  ctx.globalCompositeOperation='source-over';
+  const tex=new THREE.CanvasTexture(cv);
+  tex.minFilter=THREE.LinearFilter; tex.magFilter=THREE.LinearFilter;
+  const mat=new THREE.MeshPhongMaterial({map:tex,transparent:true,opacity:0.48,depthWrite:false,side:THREE.FrontSide,blending:THREE.NormalBlending});
+  cloudMesh=new THREE.Mesh(new THREE.SphereGeometry(1.018,64,64),mat);
+  cloudMesh.visible=S.settings.clouds===true;
+  cloudMesh.userData.cloudDrift=true;
+  scene.add(cloudMesh);
 }
 
 /* ════════════════════════════════════════════════════════
@@ -7250,6 +7330,9 @@ async function runSplash(){
     if(revealed) return; revealed=true;
     document.getElementById('splash')?.classList.add('out');
     document.getElementById('app')?.classList.add('live');
+    if(window.matchMedia?.('(max-width:760px)').matches && !S.panelCollapsed) {
+      setTimeout(()=>togglePanel(), 180);
+    }
     setTimeout(()=>{const splash=document.getElementById('splash');if(splash)splash.style.display='none';},1100);
     startClock(); setupKeyboard();
   };
@@ -7443,11 +7526,10 @@ function toggleGDPMode() {
   toast(`GDP overlay: ${gdpChoroMode==='choropleth'?'World Bank choropleth':'density halos'}`);
 }
 
-// Rebuild GDP overlay with choropleth support (extends existing buildGDPOverlay)
-const _baseGDPOverlay = buildGDPOverlay;
+// Rebuild GDP overlay with choropleth support without function-hoisting recursion.
 function buildGDPOverlay() {
   if(gdpChoroMode === 'choropleth') return buildGDPChoropleth();
-  return _baseGDPOverlay(); // existing halo mode
+  return buildGDPHaloOverlay();
 }
 
 async function buildGDPChoropleth() {
