@@ -19,9 +19,19 @@ jobs:
           npm install --no-save playwright
           npx playwright install --with-deps chromium
 
-      - name: Probe public globe runtime
+      - name: Start candidate release server
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 > /tmp/mpl-http.log 2>&1 &
+          echo $! > /tmp/mpl-http.pid
+          for i in {1..20}; do curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null && exit 0; sleep .25; done
+          cat /tmp/mpl-http.log
+          exit 1
+
+      - name: Probe candidate and live globe runtimes
         id: probe
         continue-on-error: true
+        env:
+          CANDIDATE_URL: http://127.0.0.1:4173/index.html
         run: node tests/browser_globe_probe.mjs
 
       - name: Upload browser receipts
@@ -33,9 +43,9 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Enforce globe regression gate
+      - name: Enforce candidate globe regression gate
         if: steps.probe.outcome != 'success'
         run: |
-          echo 'Front-facing globe runtime regression detected.' >&2
+          echo 'Candidate front-facing globe regression detected.' >&2
           cat artifacts/browser-globe/summary.json || true
           exit 1
