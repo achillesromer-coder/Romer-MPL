@@ -1,0 +1,47 @@
+{
+  "schema": "romer.mpl.workbook_contracts/1",
+  "stage": "PRE_RELEASE",
+  "verifiedDate": "2026-08-09",
+  "workbookId": "1uXs-uPDCN8xNFErkAOrCEeYv0ctzoZb5XUYop5UEBvE",
+  "workbookTitle": "MPL Engine",
+  "timezone": "Australia/Brisbane",
+  "publicRuntimeWriteMode": "PENDING_OPERATOR_TRANSPORT",
+  "sheets": {
+    "Mission_Log": {
+      "sheetId": 854288839,
+      "fields": [
+        "RunID","Timestamp","OperatorID","OperatorName","SiteID","SiteName","SiteLat","SiteLon","VehicleID","VehicleName",
+        "TransitType","FailureMode","FailureTiming","FailureTime_Tplus_s","FlightPhase","IIP_Lat","IIP_Lon","ImpactZoneType",
+        "ImpactZoneName","PopDensity_km2","Ac_m2","CAS_Primary","CAS_Secondary","CAS_Total","MPL_Casualties",
+        "MPL_Property_Bounding","MPL_Property_Asset","MPL_Property_Used","MPL_LOU_GDP","MPL_LOU_Asset","MPL_LOU_Used",
+        "MPL_ENV_Bounding","MPL_ENV_Asset","MPL_ENV_Used","MPL_TOTAL","CurrencyYear","NearestAssetID","NearestAssetKm",
+        "RunStatus","LoggedToSheets","PDFExported","AchillesBridgeRef","Notes"
+      ]
+    },
+    "Asset_Exposures": {
+      "sheetId": 1620545079,
+      "fields": [
+        "ExposureID","RunID","AssetID","AssetName","DistFromIIP_km","WithinScreeningHeuristic","PropertyLoss_AUD",
+        "LossOfUse_AUD","EnvCleanup_AUD","TotalExposure_AUD","LastUpdated"
+      ]
+    },
+    "BRIDGE_W5_Targets": {
+      "sheetId": 728608664,
+      "fields": [
+        "BridgeID","SourceSheet","SourceRowRef","ObjectID","ObjectName","SMA_au","ECC","INC_deg","DiameterKm","SpectralClass",
+        "MRS_Score","ShortlistFlag","DeltaV_kms","TOF_days","C3_km2s2","ProposedLaunchSite","ProposedLaunchWindow","MPL_RunID",
+        "MPL_Screening_Band","MPL_Total_AUD","MPL_Model_Buffer_AUD","BridgeStatus","LastUpdated","UpdatedBy"
+      ],
+      "runtimeUpdateFields": [
+        "MPL_RunID","MPL_Screening_Band","MPL_Total_AUD","MPL_Model_Buffer_AUD","BridgeStatus","LastUpdated","UpdatedBy"
+      ]
+    },
+    "BRIDGE_MPL_to_ACHILLES": {
+      "sheetId": 1900000002,
+      "fields": [
+        "BridgeID","ACHILLESRowRef","MPL_RunID","MPL_Screening_Band","MPL_Total_AUD","MPL_Model_Buffer_AUD","MPL_Calc_Date",
+        "MPL_Method_Ref","LaunchSiteID","VehicleID","FlightPhase_Worst","CAS_Total_Worst","W6_UpdateRequired"
+      ]
+    }
+  }
+}
