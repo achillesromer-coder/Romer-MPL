@@ -1,0 +1,77 @@
+{
+  "schema": "romer.mpl.pre_release_state",
+  "stage": "PRE_RELEASE",
+  "semantic_versioning_enabled": false,
+  "executable": {
+    "path": "index.html",
+    "candidate_sha256": "777be3d091c4bcf1063c02568baabe766f45f51e6486891238bd9df8e7fb3d8c",
+    "public_surface": "https://achillesromer-coder.github.io/Romer-MPL/",
+    "embed_surface": "https://romer.industries/mpl-engine"
+  },
+  "workbook": {
+    "id": "1uXs-uPDCN8xNFErkAOrCEeYv0ctzoZb5XUYop5UEBvE",
+    "name": "MPL Engine",
+    "runtime_snapshot_sha256": "ab8749b3505b25d651d3641bc612eef64acc2ff891822e05d447c511b876bb7c",
+    "runtime_snapshot_mode": "CONTROLLED_WORKBOOK_SNAPSHOT",
+    "runtime_counts": {
+      "sites": 15,
+      "vehicles": 6,
+      "population_zones": 148,
+      "high_value_assets": 25,
+      "failure_modes": 12,
+      "operators": 4,
+      "bridge_targets": 2,
+      "gdp_records": 154
+    }
+  },
+  "currency": {
+    "composite": "AUD",
+    "source_economic_currency": "USD",
+    "usd_to_aud_screening_fx": 1.4386419220256077,
+    "receipt": "RBA 2026-07-30: 1 AUD = 0.6951 USD; inverse used for screening normalisation only"
+  },
+  "globe": {
+    "earth_mean_radius_km": 6371,
+    "minimum_camera_altitude_km": 1,
+    "minimum_altitude_authority": "ROMER_RENDERING_COLLISION_CONTROL",
+    "minimum_altitude_is_regulatory_requirement": false,
+    "maximum_camera_altitude_km": 40000,
+    "default_camera_altitude_km": 10000,
+    "site_focus_altitude_km": 180,
+    "surface_overlay_max_altitude_km": 0.18
+  },
+  "regulatory_boundary": {
+    "methodology_publication_date": "2019-08-01",
+    "impact_isopleth_10e7_available": false,
+    "hva_screening_method": "ROMER_SCREENING_HEURISTIC",
+    "hva_regulatory_inclusion": false,
+    "application_ready": false,
+    "independent_specialist_review_required": true
+  },
+  "runtime_boundaries": {
+    "public_read_path": "EMBEDDED_CONTROLLED_SNAPSHOT",
+    "operator_write_path": "ACKNOWLEDGED_APPS_SCRIPT_POST",
+    "live_tle": "OPTIONAL_VISUAL_ENRICHMENT_ONLY",
+    "fabricated_tle_fallback": false,
+    "n3_raphael_in_mpl_runtime": false
+  },
+  "validation": {
+    "source_contract": "tests/pre_release_static_audit.py",
+    "model_runtime_contract": "tests/mpl_runtime_smoke.js",
+    "browser_contract": "tests/browser_globe_probe.mjs",
+    "source_workflow": ".github/workflows/mpl-pre-release-validation.yml",
+    "browser_workflow": ".github/workflows/mpl-browser-regression.yml"
+  },
+  "external_dependencies": [
+    {
+      "id": "HAZARD_GEOMETRY_10E7",
+      "required_for": "Regulatory-parity HVA inclusion",
+      "closure_condition": "Independent Flight Safety Code risk-hazard analysis supplies controlled 10^-7 probability-of-impact isopleth geometry with provenance."
+    },
+    {
+      "id": "INDEPENDENT_SPECIALIST_VALIDATION",
+      "required_for": "Application-grade MPL use",
+      "closure_condition": "Qualified independent specialist validates the model, inputs, assumptions and evidence package."
+    }
+  ]
+}
