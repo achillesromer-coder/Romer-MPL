@@ -25,8 +25,8 @@ jobs:
 
       - name: Apply current idempotent repairs
         run: |
-          # The historical migration is intentionally not re-run here: the branch is already
-          # transformed. These two repairers are idempotent and define the current reconciliation layer.
+          # Run only the current idempotent repair layer against the latest candidate head.
+          # The historical migration is preserved as provenance and is not re-applied.
           python tools/fix_mpl_prerelease_residuals.py index.html
           python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
 
