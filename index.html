@@ -2780,11 +2780,31 @@ let rocketMesh, exhaustParticles, debrisParticles;
 let iipTracePoints = [], iipTraceLine;
 let groundPlane, lAnimId, simInterval;
 
+let lResizeObserver = null;
+function launchViewportSize(canvas) {
+  const host=canvas?.parentElement;
+  const rect=host?.getBoundingClientRect?.();
+  const fallback=document.getElementById('globe-wrap')?.getBoundingClientRect?.();
+  return {
+    width:Math.max(1,Math.round(rect?.width||host?.clientWidth||fallback?.width||800)),
+    height:Math.max(1,Math.round(rect?.height||host?.clientHeight||fallback?.height||600))
+  };
+}
+function resizeLaunchScene() {
+  if(!lRenderer||!lCamera) return;
+  const canvas=document.getElementById('launch-canvas');
+  if(!canvas) return;
+  const {width,height}=launchViewportSize(canvas);
+  lRenderer.setSize(width,height,false);
+  lCamera.aspect=width/height;
+  lCamera.updateProjectionMatrix();
+}
 function initLaunchScene() {
   const canvas = document.getElementById('launch-canvas');
-  const W = canvas.parentElement.clientWidth, H = canvas.parentElement.clientHeight;
+  if(!canvas||typeof THREE==='undefined') return;
+  const {width:W,height:H}=launchViewportSize(canvas);
   lRenderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-  lRenderer.setSize(W,H); lRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  lRenderer.setSize(W,H,false); lRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
   lRenderer.shadowMap.enabled = true;
   lScene = new THREE.Scene(); lScene.fog = new THREE.FogExp2(0x020810, 0.018);
   lCamera = new THREE.PerspectiveCamera(55, W/H, 0.1, 2000);
@@ -2808,7 +2828,13 @@ function initLaunchScene() {
   lScene.add(new THREE.AmbientLight(0x112233,1.2));
   const sun=new THREE.DirectionalLight(0xfff0e0,2); sun.position.set(80,120,60); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); lScene.add(sun);
   const fill=new THREE.DirectionalLight(0x224466,0.5); fill.position.set(-60,40,-60); lScene.add(fill);
-  window.addEventListener('resize',()=>{const W2=canvas.parentElement.clientWidth,H2=canvas.parentElement.clientHeight;lRenderer.setSize(W2,H2);lCamera.aspect=W2/H2;lCamera.updateProjectionMatrix();});
+  window.addEventListener('resize',resizeLaunchScene);
+  if(typeof ResizeObserver!=='undefined'){
+    lResizeObserver?.disconnect?.();
+    lResizeObserver=new ResizeObserver(()=>resizeLaunchScene());
+    lResizeObserver.observe(canvas.parentElement);
+  }
+  requestAnimationFrame(resizeLaunchScene);
   animateLaunch();
 }
 
@@ -4352,33 +4378,22 @@ async function loadTopoJSONMap() {
   if(badge){ badge.textContent='LOADING HD TEXTURE…'; }
   const res = ctryTopo?.objects?.countries ? '50m' : '110m';
   toast(`Vector coastlines loaded — Natural Earth ${res} · biome palette`);
-  setTimeout(loadHDGlobeTexture, 600);
+  setTimeout(finalizeControlledGlobeSurface, 600);
 }
 
-function loadHDGlobeTexture() {
+function finalizeControlledGlobeSurface() {
+  // The Natural Earth/vector canvas generated above is the controlled globe surface.
+  // Keeping it in-document avoids cross-origin texture failures and preserves deterministic screenshots.
   const badge=document.getElementById('globe-hd-badge');
-  if(badge){ badge.textContent='LOADING HD…'; badge.classList.add('show'); }
-  // Reliable Blue Marble sources — prioritise stable NASA/NOAA mirrors
-  const URLS=[
-    'https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.jpg',
-    'https://unpkg.com/three-globe@2.31.0/example/img/earth-blue-marble.jpg',
-    'https://unpkg.com/three-globe@2.26.15/example/img/earth-blue-marble.jpg',
-    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
-  ];
-  const loader=new THREE.TextureLoader();
-  const tryLoad=(idx)=>{
-    if(idx>=URLS.length){ if(badge) badge.classList.remove('show'); return; }
-    loader.load(URLS[idx], tex=>{
-      if(!globe||!globe.material){ if(badge) badge.classList.remove('show'); return; }
-      tex.anisotropy=renderer?renderer.capabilities.getMaxAnisotropy():16;
-      tex.minFilter=THREE.LinearMipMapLinearFilter;
-      globe.material.map=tex; globe.material.needsUpdate=true;
-      if(badge) badge.classList.remove('show');
-      buildDataOverlay();
-      toast('HD satellite texture loaded — Blue Marble');
-    }, undefined, ()=>tryLoad(idx+1));
-  };
-  tryLoad(0);
+  if(globe?.material?.map){
+    globe.material.map.anisotropy=renderer?renderer.capabilities.getMaxAnisotropy():16;
+    globe.material.needsUpdate=true;
+  }
+  buildDataOverlay();
+  if(badge){
+    badge.textContent='VECTOR TERRAIN · NATURAL EARTH';
+    badge.classList.remove('show');
+  }
 }
 
 
@@ -6124,10 +6139,13 @@ function buildCloudLayer() {
    EXTENDED KEYBOARD SHORTCUTS
 ════════════════════════════════════════════════════════ */
 
+let viewHideTimer=null, resultsHideTimer=null;
 function setView(v){
   const allowed=new Set(['globe','object','orbit']);
   if(!allowed.has(v)){console.warn('[MPL view] invalid view requested',v);v='globe';}
   if(v==='object'&&!S.site){toast('Select a launch site before Object view');v='globe';}
+  if(viewHideTimer){clearTimeout(viewHideTimer);viewHideTimer=null;}
+  if(resultsHideTimer){clearTimeout(resultsHideTimer);resultsHideTimer=null;}
   S.view=v;
   const viewButtons={globe:document.getElementById('vbtn-g'),object:document.getElementById('vbtn-o'),orbit:document.getElementById('vbtn-orbit')};
   Object.entries(viewButtons).forEach(([name,button])=>{if(button){const active=name===v;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}});
@@ -6139,11 +6157,15 @@ function setView(v){
   }
   if(v==='object'){
     if(lv){lv.style.display='flex';requestAnimationFrame(()=>lv.classList.add('show'));}
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!lRenderer)initLaunchScene();setTimeout(ensureCorridorOverlay,300);}));return;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(!lRenderer)initLaunchScene();else resizeLaunchScene();
+      setTimeout(ensureCorridorOverlay,300);
+    }));return;
   }
-  lv?.classList.remove('show');setTimeout(()=>{if(lv)lv.style.display='none';},600);
+  lv?.classList.remove('show');
+  viewHideTimer=setTimeout(()=>{if(S.view==='globe'&&lv)lv.style.display='none';viewHideTimer=null;},600);
   document.getElementById('mpl-results')?.classList.remove('show');
-  setTimeout(()=>{const el=document.getElementById('mpl-results');if(el)el.style.display='none';},500);
+  resultsHideTimer=setTimeout(()=>{if(S.view==='globe'){const el=document.getElementById('mpl-results');if(el)el.style.display='none';}resultsHideTimer=null;},500);
   document.getElementById('iip-globe-marker')?.classList.remove('show');requestAnimationFrame(resizeGlobe);
 }
 

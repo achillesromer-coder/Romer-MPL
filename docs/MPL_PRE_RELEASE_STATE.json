@@ -4,7 +4,7 @@
   "semantic_versioning_enabled": false,
   "executable": {
     "path": "index.html",
-    "candidate_sha256": "777be3d091c4bcf1063c02568baabe766f45f51e6486891238bd9df8e7fb3d8c",
+    "candidate_sha256": "8321f8b0a3dcf877fbf25cfbe5d98b6b2aa25e61709dd487c5e610a0885715df",
     "public_surface": "https://achillesromer-coder.github.io/Romer-MPL/",
     "embed_surface": "https://romer.industries/mpl-engine"
   },
