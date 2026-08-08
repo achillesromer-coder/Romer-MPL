@@ -7,7 +7,7 @@
     "validate": "success",
     "tests": "success"
   },
-  "candidateSha256": "4e87785f2906f706f3cf2bdfeee96a14641a9dfbfb4ad736fe67b0b56cc4a364",
+  "candidateSha256": "b288cac72b2ce01fc122a98611a2f1ac28530b803f2b998b6b0e51d439375a2c",
   "workbookContracts": [
     "Mission_Log",
     "Asset_Exposures",
