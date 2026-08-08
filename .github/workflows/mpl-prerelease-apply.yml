@@ -6,6 +6,7 @@ on:
     paths:
       - tools/fix_mpl_prerelease_residuals.py
       - tools/fix_mpl_transport_and_reporting.py
+      - tools/fix_mpl_screened_asset_summary.py
       - tools/fix_mpl_static_audit_prerelease.py
       - .github/workflows/mpl-prerelease-apply.yml
   pull_request:
@@ -30,6 +31,7 @@ jobs:
         run: |
           python tools/fix_mpl_prerelease_residuals.py index.html
           python tools/fix_mpl_transport_and_reporting.py index.html
+          python tools/fix_mpl_screened_asset_summary.py index.html
           python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
 
       - name: Validate source invariants and JavaScript syntax
@@ -55,7 +57,7 @@ jobs:
             "hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','function calculateMPL({',
             'function setView(requestedView)','async function runSplash(){','const MISSION_LOG_FIELDS=Object.freeze([',
             'const ASSET_EXPOSURE_FIELDS=Object.freeze([','const BRIDGE_W5_UPDATE_FIELDS=Object.freeze([',
-            'const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze(['
+            'const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze([','const screenedAssets=assets.filter(a=>a.inCorridor===true);'
           ]
           compact=source.replace(' ','')
           for marker in required:
