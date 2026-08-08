@@ -3,6 +3,11 @@ name: MPL Source and Calculation Gate
 on:
   push:
     branches: [mpl/pre-release-hardening-2026-08-09]
+    paths:
+      - index.html
+      - tests/**
+      - tools/mpl_static_audit.py
+      - .github/workflows/mpl-source-gate.yml
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -16,12 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate source invariants
+      - name: Validate exact committed source invariants
         run: |
-          python tools/fix_mpl_prerelease_residuals.py index.html
-          python tools/fix_mpl_transport_and_reporting.py index.html
-          python tools/fix_mpl_screened_asset_summary.py index.html
-          python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
           python - <<'PY'
           from pathlib import Path
           from html.parser import HTMLParser
@@ -36,15 +37,47 @@ jobs:
           ids=IDs();ids.feed(source)
           dup=[k for k,v in collections.Counter(ids.values).items() if v>1]
           assert not dup,dup
-          assert len(re.findall(r'function\s+calculateMPL\s*\(',source))==1
-          assert len(re.findall(r'function\s+showSatPopup\s*\(',source))==1
-          assert len(re.findall(r'function\s+logMissionRun\s*\(',source))==1
-          assert len(re.findall(r'async\s+function\s+runSplash\s*\(',source))==1
-          assert source.count("addEventListener('webglcontextlost'")==1
-          for marker in ['v0.2.0','MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude','INSURANCE REQ.','INS. REQ.','TODO','FIXME','TBD','WIP','async async function runMission','logToSheets(data)',"r.compliance.includes('PASS')",'MPL_Compliance:']:
-              assert marker not in source,marker
-          for marker in ["releaseStage: 'PRE_RELEASE'",'CAMERA_MIN_ALTITUDE_KM=1',"dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'","hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','async function runSplash(){','const MISSION_LOG_FIELDS=Object.freeze([','const ASSET_EXPOSURE_FIELDS=Object.freeze([','const BRIDGE_W5_UPDATE_FIELDS=Object.freeze([','const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze([','const screenedAssets=assets.filter(a=>a.inCorridor===true);']:
-              assert marker in source.replace(' ','') if ' ' not in marker else marker in source,marker
+
+          counts={
+            'calculateMPL':len(re.findall(r'function\s+calculateMPL\s*\(',source)),
+            'showSatPopup':len(re.findall(r'function\s+showSatPopup\s*\(',source)),
+            'logMissionRun':len(re.findall(r'function\s+logMissionRun\s*\(',source)),
+            'runSplash':len(re.findall(r'async\s+function\s+runSplash\s*\(',source)),
+            'webglContextLost':source.count("addEventListener('webglcontextlost'")
+          }
+          assert all(v==1 for v in counts.values()),counts
+
+          required=[
+            "releaseStage: 'PRE_RELEASE'",
+            "dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'",
+            "enrichmentMode: 'CONTROLLED_EMBEDDED_ONLY'",
+            'CAMERA_MIN_ALTITUDE_KM=1',
+            "const GLOBE_SURFACE_MODE='HARD_OPAQUE_EARTH';",
+            'globe.userData.surfaceMode=GLOBE_SURFACE_MODE;',
+            'transparent:false,opacity:1,depthTest:true,depthWrite:true,side:THREE.FrontSide',
+            "hvaSelection:'ROMER_SCREENING_HEURISTIC'",
+            'const wait=milliseconds=>new Promise',
+            'await loadSheets();',
+            'async function runMission(){',
+            'const MISSION_LOG_FIELDS=Object.freeze([',
+            'const ASSET_EXPOSURE_FIELDS=Object.freeze([',
+            'const BRIDGE_W5_UPDATE_FIELDS=Object.freeze([',
+            'const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze([',
+            'const screenedAssets=assets.filter(a=>a.inCorridor===true);',
+            'Australian Space Agency (2019), Maximum Probable Loss Methodology',
+            'fmtUSD(ASA.CASUALTY_VALUE)',
+            'fmtUSD(ASA.ENV_BOUNDING)'
+          ]
+          for marker in required: assert marker in source,marker
+
+          forbidden=[
+            'v0.2.0','MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude',
+            'INSURANCE REQ.','INS. REQ.','TODO','FIXME','TBD','WIP','async async function runMission',
+            'logToSheets(data)',"r.compliance.includes('PASS')",'MPL_Compliance:','$6,271,750','$237,000',
+            'Appendix D — MPL Calculation Methodology','setTimeout(fetchLiveGDP','setTimeout(fetchLivePopDensity',
+            'setTimeout(fetchJPLHorizons','fetchLiveTLEs().then','setTimeout(loadHDGlobeTexture'
+          ]
+          for marker in forbidden: assert marker not in source,marker
           PY
           node --check /tmp/mpl-inline.js
           git diff --check
@@ -52,10 +85,10 @@ jobs:
       - name: Run detector regression tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
-      - name: Run calculation and data-contract smoke
+      - name: Run calculation data and workbook-contract smoke
         run: node tests/mpl_runtime_smoke.js index.html
 
-      - name: Produce and enforce static audit receipt
+      - name: Produce and enforce zero-finding static audit receipt
         run: |
           mkdir -p artifacts/source-gate
           python tools/mpl_static_audit.py index.html --output artifacts/source-gate/mpl-static-audit.json
@@ -67,11 +100,11 @@ jobs:
           assert r['finding_count']==0,r['findings']
           PY
 
-      - name: Upload source receipts
+      - name: Upload exact-source receipts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mpl-source-gate-${{ github.sha }}
           path: artifacts/source-gate
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
