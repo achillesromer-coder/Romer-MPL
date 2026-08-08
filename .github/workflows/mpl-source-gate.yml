@@ -1,0 +1,65 @@
+name: MPL Source and Calculation Gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-calculation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate source invariants
+        run: |
+          python tools/fix_mpl_prerelease_residuals.py index.html
+          python - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import collections,re
+          source=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',source,re.S)
+          assert scripts,'inline application script missing'
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          class IDs(HTMLParser):
+              def __init__(self): super().__init__(); self.values=[]
+              def handle_starttag(self,tag,attrs): self.values += [v for k,v in attrs if k=='id' and v]
+          ids=IDs();ids.feed(source)
+          dup=[k for k,v in collections.Counter(ids.values).items() if v>1]
+          assert not dup,dup
+          assert len(re.findall(r'function\s+calculateMPL\s*\(',source))==1
+          assert len(re.findall(r'function\s+showSatPopup\s*\(',source))==1
+          assert source.count("addEventListener('webglcontextlost'")==1
+          for marker in ['v0.2.0','MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude','INSURANCE REQ.','TODO','FIXME','TBD','WIP','async async function runMission']:
+              assert marker not in source,marker
+          for marker in ["releaseStage: 'PRE_RELEASE'",'CAMERA_MIN_ALTITUDE_KM=1',"dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'","hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){']:
+              assert marker in source.replace(' ','') if ' ' not in marker else marker in source,marker
+          PY
+          node --check /tmp/mpl-inline.js
+          git diff --check
+
+      - name: Run detector regression tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Run calculation and data-contract smoke
+        run: node tests/mpl_runtime_smoke.js index.html
+
+      - name: Produce static audit receipt
+        run: |
+          mkdir -p artifacts/source-gate
+          python tools/mpl_static_audit.py index.html --output artifacts/source-gate/mpl-static-audit.json
+          sha256sum index.html | tee artifacts/source-gate/index.sha256
+          cat artifacts/source-gate/mpl-static-audit.json
+
+      - name: Upload source receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpl-source-gate-${{ github.sha }}
+          path: artifacts/source-gate
+          if-no-files-found: error
+          retention-days: 30
