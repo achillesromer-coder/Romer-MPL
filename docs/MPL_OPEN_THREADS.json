@@ -1,0 +1,49 @@
+{
+  "schema": "romer.mpl.open_threads/1",
+  "stage": "PRE_RELEASE",
+  "updated": "2026-08-09",
+  "threads": [
+    {
+      "id": "CALC-001",
+      "state": "OPEN",
+      "title": "Methodology parity regression",
+      "closure": "Representative uprange, downrange and return cases reproduce the controlled methodology equations and phase rules with independent specialist review."
+    },
+    {
+      "id": "TRAJ-001",
+      "state": "OPEN",
+      "title": "10^-7 impact-isopleth ingestion",
+      "closure": "Import independently derived Flight Safety Code risk-hazard-analysis geometry and use it for regulatory-parity HVA inclusion."
+    },
+    {
+      "id": "CONST-001",
+      "state": "OPEN",
+      "title": "Controlled monetary-value provenance",
+      "closure": "Attach explicit adjustment/indexation provenance and independent review receipts for controlled workbook monetary constants."
+    },
+    {
+      "id": "DATA-001",
+      "state": "IN_PROGRESS",
+      "title": "Controlled browser data snapshot",
+      "closure": "Generate the browser snapshot from the canonical workbook with schema, generated-at timestamp and source hash rather than relying on manually embedded data."
+    },
+    {
+      "id": "WRITE-001",
+      "state": "OPEN",
+      "title": "Authenticated operator write transport",
+      "closure": "Separate authenticated operational logging/writeback from anonymous static public execution and record acknowledgements."
+    },
+    {
+      "id": "A11Y-001",
+      "state": "IN_PROGRESS",
+      "title": "Accessibility acceptance",
+      "closure": "Desktop/mobile browser gates verify keyboard navigation, switches, view/panel state, focus handling and reduced-motion behaviour."
+    },
+    {
+      "id": "DOMAIN-001",
+      "state": "OPEN",
+      "title": "MPL and N3 repository boundary",
+      "closure": "Complete a provenance-preserving separation plan for adjacent N3/Raphael research material without changing MPL execution authority."
+    }
+  ]
+}
