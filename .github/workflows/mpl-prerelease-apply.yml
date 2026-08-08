@@ -21,6 +21,7 @@ jobs:
         run: |
           python tools/harden_mpl_prerelease.py index.html index.html
           python tools/fix_mpl_prerelease_residuals.py index.html
+          python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
 
       - name: Validate source invariants and JavaScript syntax
         run: |
@@ -30,7 +31,7 @@ jobs:
           import collections,re
           source=Path('index.html').read_text(encoding='utf-8')
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',source,re.S)
-          assert scripts, 'inline application script missing'
+          assert scripts,'inline application script missing'
           Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
           class IDs(HTMLParser):
               def __init__(self): super().__init__(); self.values=[]
@@ -38,21 +39,13 @@ jobs:
           p=IDs();p.feed(source)
           dup=[k for k,v in collections.Counter(p.values).items() if v>1]
           assert not dup,dup
-          required=[
-            'CAMERA_MIN_ALTITUDE_KM=1',
-            "releaseStage: 'PRE_RELEASE'",
-            "dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'",
-            "hvaSelection:'ROMER_SCREENING_HEURISTIC'",
-            'async function runMission(){',
-            'function calculateMPL({',
-            'function setView(requestedView)',
-          ]
+          required=['CAMERA_MIN_ALTITUDE_KM=1',"releaseStage: 'PRE_RELEASE'","dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'","hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','function calculateMPL({','function setView(requestedView)','function runSplash(){ return bootApp(); }']
           compact=source.replace(' ','')
           for marker in required:
               hay=compact if ' ' not in marker else source
-              assert marker in hay, marker
+              assert marker in hay,marker
           forbidden=['MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude','INSURANCE REQ.','v0.2.0','TODO','FIXME','TBD','WIP','async async function runMission']
-          for marker in forbidden: assert marker not in source, marker
+          for marker in forbidden: assert marker not in source,marker
           assert len(re.findall(r'function\s+calculateMPL\s*\(',source))==1
           assert len(re.findall(r'function\s+showSatPopup\s*\(',source))==1
           assert source.count("addEventListener('webglcontextlost'")==1
@@ -60,20 +53,26 @@ jobs:
           node --check /tmp/mpl-inline.js
           git diff --check
 
-      - name: Run static audit and unit tests
+      - name: Run static audit unit and calculation tests
         run: |
           python -m unittest discover -s tests -p 'test_*.py' -v
+          node tests/mpl_runtime_smoke.js index.html
           python tools/mpl_static_audit.py index.html --output /tmp/mpl-audit.json
           cat /tmp/mpl-audit.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/mpl-audit.json'))
+          assert r['finding_count']==0,r['findings']
+          PY
 
-      - name: Commit transformed source
+      - name: Commit reconciled source and audit logic
         run: |
           git config user.name 'Römer MPL Pre-release Gate'
           git config user.email 'achilles.romer@gmail.com'
-          git add index.html
+          git add index.html tools/mpl_static_audit.py
           if git diff --cached --quiet; then
             echo 'Pre-release source already reconciled.'
           else
-            git commit -m 'Reconcile MPL pre-release runtime hardening'
+            git commit -m 'Reconcile MPL pre-release runtime and provenance audit'
             git push origin HEAD:mpl/pre-release-hardening-2026-08-09
           fi
