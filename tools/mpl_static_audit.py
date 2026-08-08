@@ -181,7 +181,7 @@ def audit_source(source: str) -> list[Finding]:
             "Add a versioned constant registry with source URL, publication date, section, units and review status."
         ))
 
-    if not _present(source, r"sourceHash|source_hash|modelHash|model_hash|commitSha|commit_sha"):
+    if not _present(source, r"sourceHash|source_hash|modelHash|model_hash|commitSha|commit_sha|parentSourceSha256|runtimeHash"):
         findings.append(Finding(
             "MPL-PROV-002", "MEDIUM", "OPEN",
             "Run/report lacks immutable model-source identifier",

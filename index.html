@@ -1791,7 +1791,7 @@ body {
       </div>
       <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;">
         <button class="btn-pri" onclick="runAIAnalysis()" id="ai-run-btn" style="font-size:11px;padding:6px 14px;">⬡ Analyse MPL Result</button>
-        <span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">Powered by Claude · CF-020</span>
+        <span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">Deterministic evidence review · no external AI call</span>
         <button class="btn-sec" onclick="closeAI()" style="margin-left:auto;font-size:11px;padding:5px 12px;">Close</button>
       </div>
     </div>
@@ -2340,7 +2340,7 @@ async function computeRuntimeReceiptHash() {
     const bytes = new TextEncoder().encode(document.documentElement.outerHTML);
     const hash = await crypto.subtle.digest('SHA-256', bytes);
     MODEL_META.runtimeHash = [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
-  } catch { MODEL_META.runtimeHash = MODEL_META.baseBlob.slice(0,16); }
+  } catch { MODEL_META.runtimeHash = MODEL_META.parentSourceSha256.slice(0,16); }
   updateModelReceipt();
   return MODEL_META.runtimeHash;
 }
@@ -3627,11 +3627,11 @@ function showMPLResults(r,sim) {
   document.getElementById('mr-mpl-total').textContent=fmtUSD(r.MPL_TOTAL);
   renderMPLComposition(r);
 
-  // Insurance recommendation row (add if element exists)
+  // Model buffer row (110% analytical margin; not an insurance determination).
   const insEl = document.getElementById('mr-ins-req');
   if(insEl) insEl.textContent = fmtUSD(r.MODEL_BUFFER || Math.round(r.MPL_TOTAL * 1.1));
 
-  // Full HVA exposure table — all assets (PRE-RELEASE: show all 13, corridor flag, azimuth delta)
+  // Full HVA screening table — all controlled assets with heuristic azimuth/distance evidence.
   const assetsWrap = document.getElementById('mpl-assets-wrap');
   const assetsList = document.getElementById('mpl-assets-list');
   const displayHVAs = r.allAssets || r.nearbyAssets || [];
@@ -3639,7 +3639,7 @@ function showMPLResults(r,sim) {
     assetsWrap.style.display = '';
     const HVA_ICONS = {Airport:'✈',Power:'⚡',Hospital:'🏥',Port:'🚢',Nuclear:'☢',Urban:'🏙',Space:'🛸',Energy:'⛽',Mining:'⛏',Exclusion:'🚫',Data:'💾'};
 
-    // PRE-RELEASE corridor header
+    // Screening-heuristic table header.
     assetsList.innerHTML = `
     <div style="display:flex;justify-content:space-between;padding:0 0 5px;border-bottom:1px solid var(--border);margin-bottom:4px;">
       <span style="font-family:var(--font-mono);font-size:9px;color:var(--text4);letter-spacing:.1em;">ASSET · AZ Δ°</span>
@@ -3835,7 +3835,7 @@ async function dispatchWebhook(runObj) {
   const webhookUrl=safeExternalUrl(S.webhookUrl||S.settings.webhookUrl||'');
   if(!webhookUrl) return;
   const r=runObj.result;
-  const payload={event:'mpl_run_complete',platform:'Römer MPL PRE-RELEASE',model:{version:MODEL_META.releaseStage,hash:MODEL_META.runtimeHash,methodPublicationDate:MODEL_META.methodPublicationDate},
+  const payload={event:'mpl_run_complete',platform:'Römer MPL PRE-RELEASE',model:{stage:MODEL_META.releaseStage,runtimeHash:MODEL_META.runtimeHash,methodPublicationDate:MODEL_META.methodPublicationDate},
     runId:runObj.runId,timestamp:runObj.timestamp,operator:{id:S.activeOperator?.id,name:S.activeOperator?.name},site:{id:S.site?.id,name:S.site?.name,cc:S.site?.cc},
     vehicle:{id:S.vehicle?.id,name:S.vehicle?.name},transit:S.transit?.id,failTime_s:runObj.failureTime,phase:r.phase,zone:r.zone,
     mpl:{casualties:Math.round(r.MPL_CAS),property:Math.round(r.MPL_PD),lossOfUse:Math.round(r.MPL_LOU),environmental:Math.round(r.MPL_ENV),total:Math.round(r.MPL_TOTAL),indicativeBuffer:Math.round(r.MODEL_BUFFER)},
@@ -3871,7 +3871,7 @@ function clearFlightTimeline() {
 /* ─── Settings Import / Export ─── */
 function exportSettings() {
   const config = {
-    version: 'PRE-RELEASE',
+    stage: 'PRE_RELEASE',
     exported: new Date().toISOString(),
     operator: S.activeOperator?.id || 'OP-001',
     settings: S.settings,
@@ -3905,7 +3905,7 @@ function importSettings() {
           renderVehicles();
         }
         applySettings();
-        toast(`✓ Config imported — v${config.version||'?'} from ${new Date(config.exported||0).toLocaleDateString()}`);
+        toast(`✓ Config imported — ${config.stage||config.version||'LEGACY_CONFIG'} · ${new Date(config.exported||0).toLocaleDateString()}`);
       } catch(e){ toast('Import failed — invalid JSON file'); }
     };
     reader.readAsText(file);
@@ -5983,7 +5983,7 @@ function runSweep() {
       const zone  = 'RURAL';
       const r = calculateMPL({vehicle:S.vehicle, site:S.site, phase, zone, failModes:fmIds, isUprange:true});
       const mplT = Math.round(r.MPL_TOTAL * (0.85 + (t/tEnd)*0.3));
-      rows.push({ key:`T+ ${t}s`, mpl:mplT, ins:Math.round(mplT*1.1), phase, zone, cas:r.CAS_total });
+      rows.push({ key:`T+ ${t}s`, mpl:mplT, buffer:Math.round(mplT*1.1), phase, zone, cas:r.CAS_total });
     }
   } else if(axis === 'zone') {
     ZONES_LIST.forEach(zone => {
@@ -6008,7 +6008,7 @@ function runSweep() {
         <th style="padding:6px 10px;text-align:left;font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;font-weight:400;">${axis==='time'?'FAILURE TIME':axis==='zone'?'IMPACT ZONE':'FAILURE MODE'}</th>
         <th style="padding:6px 10px;text-align:left;font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;font-weight:400;">CAS</th>
         <th style="padding:6px 10px;text-align:right;font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;font-weight:400;">MPL TOTAL</th>
-        <th style="padding:6px 10px;text-align:right;font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;font-weight:400;">INSURANCE REQ.</th>
+        <th style="padding:6px 10px;text-align:right;font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;font-weight:400;">MODEL BUFFER</th>
         <th style="padding:6px 10px;text-align:left;font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;font-weight:400;">BAR</th>
       </tr>
     </thead>
@@ -6020,7 +6020,7 @@ function runSweep() {
           <td style="padding:6px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text2);">${r.key}</td>
           <td style="padding:6px 10px;font-family:var(--font-mono);font-size:10px;color:${r.cas>0?'var(--red)':'var(--green)'};">${r.cas}</td>
           <td style="padding:6px 10px;text-align:right;font-family:var(--font-mono);font-size:11px;color:${col};font-weight:500;">${fmtUSD(r.mpl)}</td>
-          <td style="padding:6px 10px;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--blue);">${fmtUSD(r.ins)}</td>
+          <td style="padding:6px 10px;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--blue);">${fmtUSD(r.buffer)}</td>
           <td style="padding:6px 10px;">
             <div style="height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;">
               <div style="height:100%;width:${Math.round(pct*100)}%;background:${col};border-radius:3px;transition:width .3s;"></div>
@@ -6094,7 +6094,7 @@ td{padding:2.5mm 4mm;border-bottom:1px solid #e8e8e8}
 <table><thead><tr><th>Scenario</th><th>CAS</th><th style="text-align:right">MPL Total (AUD)</th><th style="text-align:right">Model Buffer</th><th>Zone</th><th style="width:80px">Risk</th></tr></thead>
 <tbody>${sweepResults.map(r=>{const p=r.mpl/maxMPL;const col=p>0.7?'#c84040':p>0.35?'#c87020':'#c8a020';return`<tr>
 <td>${r.key}</td><td style="font-family:monospace;color:${r.cas>0?'#c8410a':'#1a7a40'}">${r.cas}</td>
-<td class="mpl">$${r.mpl.toLocaleString()}</td><td class="mpl" style="color:#2a62a0">$${r.ins.toLocaleString()}</td>
+<td class="mpl">$${r.mpl.toLocaleString()}</td><td class="mpl" style="color:#2a62a0">$${r.buffer.toLocaleString()}</td>
 <td>${r.zone||'—'}</td>
 <td><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(p*100)}%;background:${col}"></div></div></td></tr>`;}).join('')}
 </tbody></table>
@@ -6131,7 +6131,7 @@ function renderRunsPanel() {
   }
   panel.innerHTML = RUN_HISTORY.map((r,i) => {
     const comp = r.result?.compliance||'';
-    const col  = comp.includes('PASS')?'var(--green)':comp.includes('FAIL')?'var(--red)':'var(--gold)';
+    const col  = comp.includes('LOWER')?'var(--green)':comp.includes('UPPER')?'var(--orange)':'var(--gold)';
     return `
     <div style="border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px;background:var(--bg2);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -6278,7 +6278,7 @@ function runBatch() {
           <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">HVA: ${r.nearestAsset} (W=${r.proxWeight})</div></td>
         <td style="padding:5px 7px;text-align:center;font-family:var(--font-mono);font-size:10px;color:${r.cas>0?'var(--red)':'var(--green)'};">${r.cas}</td>
         <td style="padding:5px 7px;text-align:right;font-family:var(--font-mono);font-size:11px;color:${col};font-weight:600;">${fmtUSD(r.mpl)}</td>
-        <td style="padding:5px 7px;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--blue);">${fmtUSD(r.ins)}</td>
+        <td style="padding:5px 7px;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--blue);">${fmtUSD(r.buffer)}</td>
         <td style="padding:5px 7px;font-family:var(--font-mono);font-size:8px;color:${cCol};">${r.compliance.split('—')[0].trim()}</td>
         <td style="padding:5px 7px;min-width:70px;"><div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;">
           <div style="height:100%;width:${Math.round(pct*100)}%;background:${col};border-radius:3px;"></div></div></td>
@@ -6339,8 +6339,7 @@ function closeAI() { document.getElementById('ai-modal').style.display='none'; }
 function runAIAnalysis(){if(!S.lastRun){toast('Run a simulation first');return;}const r=S.lastRun.result,out=document.getElementById('ai-output'),gaps=[];if(!r.evidenceBoundary?.impactIsopleth10e7)gaps.push('Flight Safety Code 10⁻⁷ probability-of-impact isopleth not supplied.');if(CONSTANT_RECEIPTS['MC-001']?.reviewStatus!=='VERIFIED')gaps.push('Controlled monetary constant provenance remains subject to independent source review.');out.innerHTML=`<div class="u-section-hd">MODEL EVIDENCE REVIEW</div>${gaps.map(g=>`<div class="u-card" style="margin-bottom:6px"><span class="u-tag u-tag-gld">REVIEW</span> <span style="font-size:11px">${escapeHTML(g)}</span></div>`).join('')}<div class="u-mono9" style="margin-top:10px;color:var(--text4)">Model-evidence check only; not legal advice, regulator acceptance, permit likelihood, or an application-ready MPL determination.</div>`;}
 
 /* ════════════════════════════════════════════════════════
-   BC-009:/* ════════════════════════════════════════════════════════
-   BC-009: MISSION URL SHARE
+   BC-009: MISSION URL SHARE MISSION URL SHARE
 ════════════════════════════════════════════════════════ */
 function shareMission() {
   if(!S.lastRun) { toast('No run data to share'); return; }
@@ -6350,7 +6349,7 @@ function shareMission() {
     site: S.site?.id||'',
     veh:  S.vehicle?.id||'',
     mpl:  Math.round(r.MPL_TOTAL),
-    ins:  Math.round(r.MODEL_BUFFER),
+    buf:  Math.round(r.MODEL_BUFFER),
     comp: r.compliance.includes('UPPER')?'UPPER_REVIEW':r.compliance.includes('LOWER')?'LOWER_BAND':'REVIEW',
     cas:  r.CAS_total,
     ts:   Date.now(),
@@ -6367,7 +6366,7 @@ function readShareHash() {
     const params = new URLSearchParams(atob(location.hash.slice(7)));
     const runId = params.get('rid');
     const mpl   = +params.get('mpl');
-    const ins   = +params.get('ins');
+    const buffer = +(params.get('buf')||params.get('ins')||0);
     const comp  = params.get('comp');
     const cas   = +params.get('cas');
     if(runId && mpl) {
@@ -6629,9 +6628,11 @@ function newMission(){
   S.simRunning=false;S.simPaused=false;S.simSpeed=1;S.lastRun=null;
   document.getElementById('t-status').textContent='STANDBY';
   document.getElementById('t-status').className='tele-val g';
-  ['t-site','t-vehicle','t-phase','t-iip'].forEach(id=>document.getElementById(id).textContent='—');
   document.getElementById('t-site').textContent='NONE';
-  document.getElementById('t-mpl-exp').textContent='—';
+  document.getElementById('t-vehicle').textContent='NO VEHICLE';
+  document.getElementById('t-phase').textContent='STANDBY';
+  document.getElementById('t-iip').textContent='NO ACTIVE IIP';
+  document.getElementById('t-mpl-exp').textContent='NOT CALCULATED';
   document.getElementById('t-mpl-exp').className='tele-val d';
   document.getElementById('tb-mission').textContent='GLOBE VIEW · NO MISSION';
   document.getElementById('live-badge').textContent='STANDBY';
@@ -7096,6 +7097,7 @@ function bootApp(){
   setTimeout(fetchLiveGDP,2500); setTimeout(fetchLivePopDensity,4200); setTimeout(fetchJPLHorizons,6200);
   readShareHash();
 }
+async function runSplash(){ return bootApp(); }
 window.addEventListener('load',runSplash);
 </script>
 </body>
