@@ -1,6 +1,12 @@
 name: MPL Pre-release Hardening Reconcile
 
 on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-09]
+    paths:
+      - tools/fix_mpl_prerelease_residuals.py
+      - tools/fix_mpl_static_audit_prerelease.py
+      - .github/workflows/mpl-prerelease-apply.yml
   pull_request:
     branches: [main]
   workflow_dispatch:
