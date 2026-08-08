@@ -1,0 +1,11 @@
+{
+  "schema": "romer.mpl.reconcile_gate/1",
+  "stage": "PRE_RELEASE",
+  "status": "PASS",
+  "steps": {
+    "apply": "success",
+    "validate": "success",
+    "tests": "success"
+  },
+  "candidateSha256": "d3e25cb3795fdd26364769a883b89f4023ded33296fee5eadf25a823ebfdd43f"
+}
