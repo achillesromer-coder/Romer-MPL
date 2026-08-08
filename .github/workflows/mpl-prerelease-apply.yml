@@ -5,6 +5,7 @@ on:
     branches: [mpl/pre-release-hardening-2026-08-09]
     paths:
       - tools/fix_mpl_prerelease_residuals.py
+      - tools/fix_mpl_transport_and_reporting.py
       - tools/fix_mpl_static_audit_prerelease.py
       - .github/workflows/mpl-prerelease-apply.yml
   pull_request:
@@ -28,6 +29,7 @@ jobs:
         continue-on-error: true
         run: |
           python tools/fix_mpl_prerelease_residuals.py index.html
+          python tools/fix_mpl_transport_and_reporting.py index.html
           python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
 
       - name: Validate source invariants and JavaScript syntax
@@ -48,15 +50,22 @@ jobs:
           p=IDs();p.feed(source)
           dup=[k for k,v in collections.Counter(p.values).items() if v>1]
           assert not dup,dup
-          required=['CAMERA_MIN_ALTITUDE_KM=1',"releaseStage: 'PRE_RELEASE'","dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'","hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','function calculateMPL({','function setView(requestedView)','async function runSplash(){']
+          required=[
+            'CAMERA_MIN_ALTITUDE_KM=1',"releaseStage: 'PRE_RELEASE'","dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'",
+            "hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','function calculateMPL({',
+            'function setView(requestedView)','async function runSplash(){','const MISSION_LOG_FIELDS=Object.freeze([',
+            'const ASSET_EXPOSURE_FIELDS=Object.freeze([','const BRIDGE_W5_UPDATE_FIELDS=Object.freeze([',
+            'const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze(['
+          ]
           compact=source.replace(' ','')
           for marker in required:
               hay=compact if ' ' not in marker else source
               assert marker in hay,marker
-          forbidden=['MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude','INSURANCE REQ.','INS. REQ.','v0.2.0','TODO','FIXME','TBD','WIP','async async function runMission']
+          forbidden=['MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude','INSURANCE REQ.','INS. REQ.','v0.2.0','TODO','FIXME','TBD','WIP','async async function runMission','logToSheets(data)',"r.compliance.includes('PASS')",'MPL_Compliance:']
           for marker in forbidden: assert marker not in source,marker
           assert len(re.findall(r'function\s+calculateMPL\s*\(',source))==1
           assert len(re.findall(r'function\s+showSatPopup\s*\(',source))==1
+          assert len(re.findall(r'function\s+logMissionRun\s*\(',source))==1
           assert len(re.findall(r'async\s+function\s+runSplash\s*\(',source))==1
           assert source.count("addEventListener('webglcontextlost'")==1
           PY
@@ -87,7 +96,7 @@ jobs:
           if git diff --cached --quiet; then
             echo 'Pre-release source already reconciled.'
           else
-            git commit -m 'Reconcile MPL pre-release runtime and provenance audit'
+            git commit -m 'Reconcile MPL pre-release runtime and workbook contracts'
             git push origin HEAD:mpl/pre-release-hardening-2026-08-09
           fi
 
@@ -107,7 +116,8 @@ jobs:
             'stage':'PRE_RELEASE',
             'status':'PASS' if all(os.environ.get(k)=='success' for k in ('APPLY_OUTCOME','VALIDATE_OUTCOME','TESTS_OUTCOME')) else 'FAIL',
             'steps':{'apply':os.environ.get('APPLY_OUTCOME'),'validate':os.environ.get('VALIDATE_OUTCOME'),'tests':os.environ.get('TESTS_OUTCOME')},
-            'candidateSha256':hashlib.sha256(p.read_bytes()).hexdigest()
+            'candidateSha256':hashlib.sha256(p.read_bytes()).hexdigest(),
+            'workbookContracts':['Mission_Log','Asset_Exposures','BRIDGE_W5_Targets','BRIDGE_MPL_to_ACHILLES']
           }
           Path('docs/MPL_RECONCILE_GATE_LATEST.json').write_text(json.dumps(receipt,indent=2)+'\n')
           print(json.dumps(receipt,indent=2))
