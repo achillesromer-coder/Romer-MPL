@@ -1,0 +1,66 @@
+{
+  "schema": "romer.mpl.browser_gate/1",
+  "stage": "PRE_RELEASE",
+  "status": "FAIL",
+  "candidateSha256": "962b288d1eb1a235598cf1cb76a6d53a0dc26ca52fc950645538d137701cb97a",
+  "targets": [
+    {
+      "name": "candidate-desktop",
+      "exerciseError": "frame.waitForFunction: Timeout 25000ms exceeded.\n    at exerciseCandidate (/home/runner/work/Romer-MPL/Romer-MPL/tests/browser_globe_probe.mjs:51:15)\n    at /home/runner/work/Romer-MPL/Romer-MPL/tests/browser_globe_probe.mjs:188:24",
+      "pageErrors": [],
+      "canvas": {
+        "x": 300,
+        "y": 48,
+        "width": 1300,
+        "height": 910
+      },
+      "webgl": {
+        "exists": true,
+        "lost": false,
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      },
+      "state": {
+        "view": "globe",
+        "step": 1,
+        "panelCollapsed": false,
+        "cameraAltitudeKm": 11500,
+        "sheetsOk": false,
+        "site": null,
+        "vehicle": null,
+        "transit": null,
+        "simRunning": false,
+        "lastRun": null
+      },
+      "checks": []
+    },
+    {
+      "name": "candidate-mobile",
+      "exerciseError": "frame.waitForFunction: Timeout 25000ms exceeded.\n    at exerciseCandidate (/home/runner/work/Romer-MPL/Romer-MPL/tests/browser_globe_probe.mjs:51:15)\n    at /home/runner/work/Romer-MPL/Romer-MPL/tests/browser_globe_probe.mjs:188:24",
+      "pageErrors": [],
+      "canvas": {
+        "x": 0,
+        "y": 48,
+        "width": 430,
+        "height": 836
+      },
+      "webgl": {
+        "exists": true,
+        "lost": false,
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      },
+      "state": {
+        "view": "globe",
+        "step": 1,
+        "panelCollapsed": false,
+        "cameraAltitudeKm": 11500,
+        "sheetsOk": false,
+        "site": null,
+        "vehicle": null,
+        "transit": null,
+        "simRunning": false,
+        "lastRun": null
+      },
+      "checks": []
+    }
+  ]
+}
