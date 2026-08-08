@@ -20,6 +20,7 @@ jobs:
         run: |
           python tools/fix_mpl_prerelease_residuals.py index.html
           python tools/fix_mpl_transport_and_reporting.py index.html
+          python tools/fix_mpl_screened_asset_summary.py index.html
           python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
           python - <<'PY'
           from pathlib import Path
@@ -42,7 +43,7 @@ jobs:
           assert source.count("addEventListener('webglcontextlost'")==1
           for marker in ['v0.2.0','MODEL_META.baseBlob','S.zoom','readSheetTab','api.anthropic.com','Powered by Claude','INSURANCE REQ.','INS. REQ.','TODO','FIXME','TBD','WIP','async async function runMission','logToSheets(data)',"r.compliance.includes('PASS')",'MPL_Compliance:']:
               assert marker not in source,marker
-          for marker in ["releaseStage: 'PRE_RELEASE'",'CAMERA_MIN_ALTITUDE_KM=1',"dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'","hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','async function runSplash(){','const MISSION_LOG_FIELDS=Object.freeze([','const ASSET_EXPOSURE_FIELDS=Object.freeze([','const BRIDGE_W5_UPDATE_FIELDS=Object.freeze([','const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze([']:
+          for marker in ["releaseStage: 'PRE_RELEASE'",'CAMERA_MIN_ALTITUDE_KM=1',"dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT'","hvaSelection:'ROMER_SCREENING_HEURISTIC'",'async function runMission(){','async function runSplash(){','const MISSION_LOG_FIELDS=Object.freeze([','const ASSET_EXPOSURE_FIELDS=Object.freeze([','const BRIDGE_W5_UPDATE_FIELDS=Object.freeze([','const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze([','const screenedAssets=assets.filter(a=>a.inCorridor===true);']:
               assert marker in source.replace(' ','') if ' ' not in marker else marker in source,marker
           PY
           node --check /tmp/mpl-inline.js
