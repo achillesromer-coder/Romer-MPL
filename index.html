@@ -3730,10 +3730,11 @@ function buildMissionLogRow(r,ctx={}){
   const runId=ctx.runId||S.lastRun?.runId||`${getRunPrefix()}-${Date.now()}`;
   const timestamp=ctx.timestamp||S.lastRun?.timestamp||new Date().toISOString();
   const assets=r.allAssets||r.nearbyAssets||[], nearest=assets.length?[...assets].sort((a,b)=>(a.dist_km??Infinity)-(b.dist_km??Infinity))[0]:null;
+  const screenedAssets=assets.filter(a=>a.inCorridor===true);
   const isUprange=String(r.phase||ctx.phase||'').toUpperCase()==='UPRANGE';
-  const propAsset=assets.reduce((sum,a)=>sum+Number(a.propExp||0),0);
-  const louAsset=assets.reduce((sum,a)=>sum+Number(a.louExp||0),0);
-  const envAsset=assets.reduce((sum,a)=>sum+Number(a.envExp||0),0);
+  const propAsset=screenedAssets.reduce((sum,a)=>sum+Number(a.propExp||0),0);
+  const louAsset=screenedAssets.reduce((sum,a)=>sum+Number(a.louExp||0),0);
+  const envAsset=screenedAssets.reduce((sum,a)=>sum+Number(a.envExp||0),0);
   const band=screeningBandCode(r.compliance);
   const notes=[
     'PRE_RELEASE',`SCREENING_BAND=${band}`,`MODEL_BUFFER_110_AUD=${Math.round(r.MODEL_BUFFER||r.MPL_TOTAL*1.10)}`,
