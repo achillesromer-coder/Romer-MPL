@@ -1,4 +1,4 @@
-name: MPL Pre-release Hardening Apply
+name: MPL Pre-release Hardening Reconcile
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  apply-hardening:
+  reconcile:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -17,9 +17,10 @@ jobs:
           ref: mpl/pre-release-hardening-2026-08-09
           fetch-depth: 0
 
-      - name: Apply idempotent pre-release hardening
+      - name: Apply current idempotent repairs
         run: |
-          python tools/harden_mpl_prerelease.py index.html index.html
+          # The historical migration is intentionally not re-run here: the branch is already
+          # transformed. These two repairers are idempotent and define the current reconciliation layer.
           python tools/fix_mpl_prerelease_residuals.py index.html
           python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
 
