@@ -1,0 +1,68 @@
+name: MPL Pre-release Hardening
+
+on:
+  push:
+    branches:
+      - mpl/pre-release-hardening-2026-08-09
+    paths:
+      - tools/harden_mpl_prerelease.py
+      - .github/workflows/mpl-pre-release-harden.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  transform-and-validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-09
+          fetch-depth: 0
+
+      - name: Apply deterministic pre-release hardening
+        run: python tools/harden_mpl_prerelease.py index.html index.html
+
+      - name: Structural and JavaScript gates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import collections,re
+          source=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',source,re.S)
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          class IDs(HTMLParser):
+              def __init__(self): super().__init__(); self.values=[]
+              def handle_starttag(self,tag,attrs): self.values += [v for k,v in attrs if k=='id' and v]
+          p=IDs(); p.feed(source)
+          dup=[k for k,v in collections.Counter(p.values).items() if v>1]
+          assert not dup, dup
+          assert len(re.findall(r'function\s+calculateMPL\s*\(',source))==1
+          assert len(re.findall(r'function\s+showSatPopup\s*\(',source))==1
+          assert source.count("canvas.addEventListener('webglcontextlost'")==1
+          assert 'CAMERA_MIN_ALTITUDE_KM=1' in source
+          assert 'cameraDistanceForAltitudeKm' in source
+          assert 'S.zoom' not in source
+          assert 'readSheetTab(' not in source
+          assert 'api.anthropic.com' not in source
+          assert 'v0.' not in source
+          assert not re.search(r'\b(?:TODO|TBD|FIXME|WIP)\b',source)
+          assert 'CONTROLLED_EMBEDDED_SNAPSHOT' in source
+          assert 'ROMER_SCREENING_HEURISTIC' in source
+          PY
+          node --check /tmp/mpl-inline.js
+          git diff --check
+
+      - name: Commit hardened application source
+        run: |
+          git config user.name 'Römer MPL Control'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'Hardened source already synchronized.'
+          else
+            git commit -m 'Harden MPL pre-release runtime and navigation'
+            git push origin HEAD:mpl/pre-release-hardening-2026-08-09
+          fi
