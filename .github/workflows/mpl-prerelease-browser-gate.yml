@@ -41,6 +41,16 @@ jobs:
           CANDIDATE_URL: http://127.0.0.1:4173/index.html
         run: node tests/browser_globe_probe.mjs
 
+      - name: Verify workbook write-receipt control in Chromium
+        id: write_receipt
+        continue-on-error: true
+        env:
+          CANDIDATE_URL: http://127.0.0.1:4173/index.html
+        run: |
+          node tests/browser_write_receipt_probe.mjs | tee /tmp/write-receipt.log
+          mkdir -p artifacts/browser-globe
+          cp /tmp/write-receipt.log artifacts/browser-globe/workbook-write-receipt.log
+
       - name: Archive exact candidate and browser receipts
         if: always()
         run: |
@@ -52,6 +62,7 @@ jobs:
         if: always()
         env:
           BROWSER_OUTCOME: ${{ steps.browser.outcome }}
+          WRITE_OUTCOME: ${{ steps.write_receipt.outcome }}
         run: |
           python - <<'PY'
           import hashlib,json,os
@@ -60,11 +71,13 @@ jobs:
           summary_path=Path('artifacts/browser-globe/summary.json')
           rows=json.loads(summary_path.read_text()) if summary_path.exists() else []
           candidate=[r for r in rows if r.get('target',{}).get('name','').startswith('candidate-')]
+          passed=os.environ.get('BROWSER_OUTCOME')=='success' and os.environ.get('WRITE_OUTCOME')=='success'
           receipt={
             'schema':'romer.mpl.browser_gate/1',
             'stage':'PRE_RELEASE',
-            'status':'PASS' if os.environ.get('BROWSER_OUTCOME')=='success' else 'FAIL',
+            'status':'PASS' if passed else 'FAIL',
             'candidateSha256':hashlib.sha256(source).hexdigest(),
+            'workbookWriteReceipt':os.environ.get('WRITE_OUTCOME'),
             'targets':[]
           }
           for r in candidate:
@@ -99,8 +112,9 @@ jobs:
           retention-days: 30
 
       - name: Enforce browser acceptance gate
-        if: steps.browser.outcome != 'success'
+        if: steps.browser.outcome != 'success' || steps.write_receipt.outcome != 'success'
         run: |
           echo 'MPL pre-release browser acceptance failed.' >&2
           cat artifacts/browser-globe/summary.json || true
+          cat artifacts/browser-globe/workbook-write-receipt.log || true
           exit 1
