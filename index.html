@@ -2286,6 +2286,7 @@ const MODEL_META = {
   runtimeHash: 'pending',
   constantRegistry: 'CONSTANT_RECEIPTS',
   dataMode: 'CONTROLLED_EMBEDDED_SNAPSHOT',
+  enrichmentMode: 'CONTROLLED_EMBEDDED_ONLY',
   dataTabs: {},
   disclaimer: 'Decision support only. Independent specialist validation is required before regulatory or application use.'
 };
@@ -4503,7 +4504,7 @@ function buildDataOverlay(){
 /* ── PROGRESSIVE GLOBE TEXTURE PIPELINE ────────────────────────────────────
    L1 (immediate): buildMapTexture() — canvas polygons, always available
    L2 (~2s):       loadTopoJSONMap() — Natural Earth 50m land+lakes, 4096×2048
-   L3 (~4s):       loadHDGlobeTexture() — NASA Blue Marble photorealistic HD
+   Optional diagnostic: loadHDGlobeTexture() — manual remote texture probe; excluded from controlled boot
    ─────────────────────────────────────────────────────────────────────── */
 
 async function loadTopoJSONMap() {
@@ -4511,7 +4512,7 @@ async function loadTopoJSONMap() {
   if(typeof topojson === 'undefined') {
     console.warn('[MPL map] TopoJSON client unavailable; retaining deterministic procedural map.');
     if(badge){ badge.textContent='PROCEDURAL MAP · VECTOR ENRICHMENT UNAVAILABLE'; badge.classList.add('show'); setTimeout(()=>badge.classList.remove('show'),2200); }
-    setTimeout(loadHDGlobeTexture, 200);
+    if(badge){badge.textContent='PROCEDURAL MAP · CONTROLLED FALLBACK';setTimeout(()=>badge.classList.remove('show'),1800);}
     return;
   }
   if(badge){ badge.textContent='LOADING VECTOR MAP…'; badge.classList.add('show'); }
@@ -4550,7 +4551,7 @@ async function loadTopoJSONMap() {
 
   if(!ctryTopo && !landTopo) {
     if(badge) badge.classList.remove('show');
-    setTimeout(loadHDGlobeTexture, 200);
+    if(badge){badge.textContent='PROCEDURAL MAP · CONTROLLED FALLBACK';setTimeout(()=>badge.classList.remove('show'),1800);}
     return;
   }
 
@@ -4681,12 +4682,12 @@ async function loadTopoJSONMap() {
   tex.minFilter=THREE.LinearMipMapLinearFilter;
   if(globe&&globe.material){ globe.material.map=tex; globe.material.needsUpdate=true; }
   buildDataOverlay();
-  if(badge){ badge.textContent='LOADING HD TEXTURE…'; }
-  const res = ctryTopo?.objects?.countries ? '50m' : '110m';
+  const res=ctryTopo?.objects?.countries?'50m':'110m';
+  if(badge){badge.textContent=`VECTOR MAP · NATURAL EARTH ${res}`;setTimeout(()=>badge.classList.remove('show'),1600);}
   toast(`Vector coastlines loaded — Natural Earth ${res} · biome palette`);
-  setTimeout(loadHDGlobeTexture, 600);
 }
 
+/* Manual diagnostic only: probes optional NASA/NOAA imagery without affecting controlled boot. */
 function loadHDGlobeTexture() {
   const badge=document.getElementById('globe-hd-badge');
   if(badge){ badge.textContent='LOADING HD…'; badge.classList.add('show'); }
@@ -5153,7 +5154,7 @@ function initGlobe(){
   setTimeout(loadTopoJSONMap,400);
   setTimeout(buildGDPOverlay,1200);
   setTimeout(buildCloudLayer,1800);
-  fetchLiveTLEs().then(()=>{ if(satRecords.length===0) initSatelliteRecords(EMBEDDED_TLES); addSatellites3D(); });
+  initSatelliteRecords(EMBEDDED_TLES); addSatellites3D();
   applyCameraAltitude(true);
   animateGlobe();
   requestAnimationFrame(resizeGlobe);
@@ -7068,6 +7069,8 @@ function ensureCorridorOverlay() {
   if(S.view==='object' && S.lastRun) buildCorridorOverlay();
 }
 
+const wait=milliseconds=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(milliseconds)||0)));
+
 function bootApp(){
   if(!S.sites.length) S.sites=SITES;
   if(!S.vehicles.length) S.vehicles=VEHICLES;
@@ -7077,7 +7080,7 @@ function bootApp(){
   if(!S.activeOperator) S.activeOperator=S.operators.find(o=>o.id==='OP-001')||S.operators[0];
   renderSites(); initGlobe(); computeRuntimeReceiptHash(); updateModelReceipt();
   setTimeout(applySettings,900); setTimeout(renderOperatorBadge,500);
-  setTimeout(fetchLiveGDP,2500); setTimeout(fetchLivePopDensity,4200); setTimeout(fetchJPLHorizons,6200);
+  S.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';MODEL_META.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';
   readShareHash();
 }
 const SPLASH_STEPS=[{id:'li0',t:0},{id:'li1',t:500},{id:'li2',t:1050},{id:'li3',t:1650},{id:'li4',t:2200},{id:'li5',t:2750}];
