@@ -3,31 +3,27 @@ name: MPL Pre-release Browser Acceptance
 on:
   push:
     branches: [mpl/pre-release-hardening-2026-08-09]
-    paths-ignore:
-      - docs/MPL_BROWSER_GATE_LATEST.json
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   browser-acceptance:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: mpl/pre-release-hardening-2026-08-09
-          fetch-depth: 0
 
       - name: Install Playwright Chromium
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
 
-      - name: Start candidate server
+      - name: Start immutable candidate server
         run: |
+          echo "Testing Git commit $GITHUB_SHA"
           python -m http.server 4173 --bind 127.0.0.1 > /tmp/mpl-http.log 2>&1 &
           echo $! > /tmp/mpl-http.pid
           for i in {1..30}; do curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null && exit 0; sleep .25; done
@@ -47,23 +43,18 @@ jobs:
         env:
           CANDIDATE_URL: http://127.0.0.1:4173/index.html
         run: |
-          node tests/browser_write_receipt_probe.mjs | tee /tmp/write-receipt.log
           mkdir -p artifacts/browser-globe
-          cp /tmp/write-receipt.log artifacts/browser-globe/workbook-write-receipt.log
+          node tests/browser_write_receipt_probe.mjs | tee artifacts/browser-globe/workbook-write-receipt.log
 
-      - name: Archive exact candidate and browser receipts
-        if: always()
-        run: |
-          mkdir -p artifacts/browser-globe
-          cp index.html artifacts/browser-globe/candidate-index.html
-          sha256sum index.html | tee artifacts/browser-globe/candidate-index.sha256
-
-      - name: Persist compact browser gate receipt
+      - name: Archive exact candidate and compact gate receipt
         if: always()
         env:
           BROWSER_OUTCOME: ${{ steps.browser.outcome }}
           WRITE_OUTCOME: ${{ steps.write_receipt.outcome }}
         run: |
+          mkdir -p artifacts/browser-globe
+          cp index.html artifacts/browser-globe/candidate-index.html
+          sha256sum index.html | tee artifacts/browser-globe/candidate-index.sha256
           python - <<'PY'
           import hashlib,json,os
           from pathlib import Path
@@ -73,8 +64,9 @@ jobs:
           candidate=[r for r in rows if r.get('target',{}).get('name','').startswith('candidate-')]
           passed=os.environ.get('BROWSER_OUTCOME')=='success' and os.environ.get('WRITE_OUTCOME')=='success'
           receipt={
-            'schema':'romer.mpl.browser_gate/1',
+            'schema':'romer.mpl.browser_gate/2',
             'stage':'PRE_RELEASE',
+            'gitSha':os.environ.get('GITHUB_SHA'),
             'status':'PASS' if passed else 'FAIL',
             'candidateSha256':hashlib.sha256(source).hexdigest(),
             'workbookWriteReceipt':os.environ.get('WRITE_OUTCOME'),
@@ -86,21 +78,15 @@ jobs:
               'name':r.get('target',{}).get('name'),
               'exerciseError':r.get('exerciseError'),
               'pageErrors':r.get('pageErrors',[]),
+              'requestFailures':r.get('requestFailures',[]),
               'canvas':d.get('canvas'),
               'webgl':d.get('glState'),
               'state':d.get('state'),
               'checks':ex.get('checks',[])
             })
-          Path('docs/MPL_BROWSER_GATE_LATEST.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          Path('artifacts/browser-globe/browser-gate-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
           print(json.dumps(receipt,indent=2))
           PY
-          git config user.name 'Römer MPL Browser Gate'
-          git config user.email 'achilles.romer@gmail.com'
-          git add docs/MPL_BROWSER_GATE_LATEST.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Record latest MPL browser acceptance receipt'
-            git push origin HEAD:mpl/pre-release-hardening-2026-08-09
-          fi
 
       - name: Upload browser receipts
         if: always()
