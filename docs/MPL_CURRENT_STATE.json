@@ -1,0 +1,46 @@
+{
+  "schema": "romer.mpl.current_state/1",
+  "stage": "PRE_RELEASE",
+  "date": "2026-08-09",
+  "canonical": {
+    "repository": "achillesromer-coder/Romer-MPL",
+    "runtime": "index.html",
+    "publicRoute": "https://romer.industries/mpl-engine",
+    "embeddedRoute": "https://achillesromer-coder.github.io/Romer-MPL/",
+    "workbookId": "1uXs-uPDCN8xNFErkAOrCEeYv0ctzoZb5XUYop5UEBvE",
+    "driveFolderId": "1eRmR6kkNimF-U6-r6bQI9C7pWskc27W9"
+  },
+  "method": {
+    "name": "Australian Space Agency Maximum Probable Loss Methodology",
+    "publicationDate": "2019-08-01",
+    "regulatoryParity": false,
+    "impactIsopleth10e7Available": false,
+    "hvaSelection": "ROMER_SCREENING_HEURISTIC"
+  },
+  "camera": {
+    "earthRadiusKm": 6371.0088,
+    "minimumAltitudeKm": 1,
+    "initialAltitudeKm": 11500,
+    "siteFocusAltitudeKm": 80,
+    "maximumAltitudeKm": 40000,
+    "minimumAltitudeAuthority": "ROMER_VISUALIZATION_INVARIANT"
+  },
+  "runtime": {
+    "publicReadMode": "CONTROLLED_EMBEDDED_SNAPSHOT",
+    "appsScriptRole": "OPERATOR_WRITE_TRANSPORT",
+    "semanticVersioning": false,
+    "directExternalAIAnalysis": false,
+    "modelBufferPct": 110
+  },
+  "qualityGates": {
+    "sourceInvariantGate": "REQUIRED",
+    "staticAudit": "REQUIRED",
+    "calculationTests": "REQUIRED",
+    "browserDesktop": "REQUIRED",
+    "browserMobile": "REQUIRED",
+    "navigationWorkflow": "REQUIRED",
+    "cameraFloor": "REQUIRED",
+    "simulationResultPath": "REQUIRED",
+    "publicDeploymentVerification": "REQUIRED_BEFORE_CANONICAL_SYNC"
+  }
+}
