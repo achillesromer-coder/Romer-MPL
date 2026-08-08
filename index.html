@@ -974,7 +974,7 @@ body {
 }
 .mpl-action-new:hover { background: var(--bg3); }
 
-/* Compliance badge */
+/* Model-check screening-band badge */
 .compliance-badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 9px; border-radius: 20px;
@@ -1566,7 +1566,7 @@ body {
               </div>
 
               <div class="mpl-actions">
-                <button class="mpl-action-btn mpl-action-log" onclick="logMissionRun()">Log to Sheets</button>
+                <button class="mpl-action-btn mpl-action-log" onclick="logMissionRun()">Prepare Workbook Write</button>
                 <button class="mpl-action-btn mpl-action-export" onclick="exportPDF()">Export PDF</button>
                 <button class="mpl-action-btn" onclick="openAI()" style="background:rgba(107,10,201,0.18);border-color:rgba(107,10,201,0.4);color:#a855f7;">⬡ Evidence Review</button>
                 <button class="mpl-action-btn" onclick="shareMission()" style="background:rgba(79,209,255,0.12);border-color:rgba(79,209,255,0.3);color:var(--blue);">⇗ Share</button>
@@ -1845,7 +1845,7 @@ body {
       <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;">
         <button class="btn-pri" onclick="runBatch()" id="batch-run-btn" style="font-size:11px;padding:6px 14px;">▶ Run Batch</button>
         <button class="btn-sec" onclick="exportBatchCSV()" id="batch-export-btn" disabled style="font-size:11px;padding:5px 12px;">Export CSV</button>
-        <button class="btn-sec" onclick="logBatchToSheets()" id="batch-log-btn" disabled style="font-size:11px;padding:5px 12px;">Log to Sheets</button>
+        <button class="btn-sec" onclick="logBatchToSheets()" id="batch-log-btn" disabled style="font-size:11px;padding:5px 12px;">Prepare Workbook Write</button>
         <button class="btn-sec" onclick="runBatchAIAnalysis()" id="batch-ai-btn" disabled style="font-size:11px;padding:5px 12px;color:#a855f7;border-color:rgba(107,10,201,.35);">⬡ Evidence Review</button>
         <button class="btn-sec" onclick="closeBatch()" style="margin-left:auto;font-size:11px;padding:5px 12px;">Close</button>
       </div>
@@ -3608,7 +3608,7 @@ function showMPLResults(r,sim) {
   document.getElementById('mpl-event-time').textContent=`T+ ${h}:${m}:${s}`;
   document.getElementById('mpl-site-desc').textContent=`${S.site?.name||'Unknown'} · ${r.phase} Phase`;
 
-  // Compliance badge
+  // Model-check screening-band badge
   const cb=document.getElementById('mpl-compliance-badge');
   cb.textContent=`MODEL CHECK — ${r.compliance}`;
   cb.className='compliance-badge compliance-review';
@@ -3703,91 +3703,119 @@ function setSimSpeed(spd){S.simSpeed=spd;[1,2,4,8].forEach(s=>{const el=document
 function togglePause(){S.simPaused=!S.simPaused;simLastT=Date.now();const el=document.getElementById('spd-p');if(el){el.textContent=S.simPaused?'▶':'⏸';el.classList.toggle('active',S.simPaused);}}
 function abortMission(){if(!S.simRunning)return;S.simFailT=simData.t+0.1;toast('⚠ MISSION ABORT — FSS Activated');}
 
+const MISSION_LOG_FIELDS=Object.freeze([
+  'RunID','Timestamp','OperatorID','OperatorName','SiteID','SiteName','SiteLat','SiteLon','VehicleID','VehicleName',
+  'TransitType','FailureMode','FailureTiming','FailureTime_Tplus_s','FlightPhase','IIP_Lat','IIP_Lon','ImpactZoneType',
+  'ImpactZoneName','PopDensity_km2','Ac_m2','CAS_Primary','CAS_Secondary','CAS_Total','MPL_Casualties',
+  'MPL_Property_Bounding','MPL_Property_Asset','MPL_Property_Used','MPL_LOU_GDP','MPL_LOU_Asset','MPL_LOU_Used',
+  'MPL_ENV_Bounding','MPL_ENV_Asset','MPL_ENV_Used','MPL_TOTAL','CurrencyYear','NearestAssetID','NearestAssetKm',
+  'RunStatus','LoggedToSheets','PDFExported','AchillesBridgeRef','Notes'
+]);
+const ASSET_EXPOSURE_FIELDS=Object.freeze(['ExposureID','RunID','AssetID','AssetName','DistFromIIP_km','WithinScreeningHeuristic','PropertyLoss_AUD','LossOfUse_AUD','EnvCleanup_AUD','TotalExposure_AUD','LastUpdated']);
+const BRIDGE_W5_UPDATE_FIELDS=Object.freeze(['MPL_RunID','MPL_Screening_Band','MPL_Total_AUD','MPL_Model_Buffer_AUD','BridgeStatus','LastUpdated','UpdatedBy']);
+const MPL_ACHILLES_BRIDGE_FIELDS=Object.freeze(['BridgeID','ACHILLESRowRef','MPL_RunID','MPL_Screening_Band','MPL_Total_AUD','MPL_Model_Buffer_AUD','MPL_Calc_Date','MPL_Method_Ref','LaunchSiteID','VehicleID','FlightPhase_Worst','CAS_Total_Worst','W6_UpdateRequired']);
+
+function screeningBandCode(value){
+  const text=String(value||'REVIEW').toUpperCase();
+  if(text.includes('LOWER')) return 'LOWER_SCREENING_BAND';
+  if(text.includes('UPPER')) return 'UPPER_REVIEW_BAND';
+  if(text.includes('INTERMEDIATE')) return 'INTERMEDIATE_REVIEW_BAND';
+  return 'REVIEW';
+}
+function exactSchemaObject(fields,data){
+  return Object.fromEntries(fields.map(field=>[field,Object.prototype.hasOwnProperty.call(data,field)?data[field]:'']));
+}
+function buildMissionLogRow(r,ctx={}){
+  const site=ctx.site||S.site||SITES[0], vehicle=ctx.vehicle||S.vehicle||VEHICLES[0], transit=ctx.transit||S.transit;
+  const runId=ctx.runId||S.lastRun?.runId||`${getRunPrefix()}-${Date.now()}`;
+  const timestamp=ctx.timestamp||S.lastRun?.timestamp||new Date().toISOString();
+  const assets=r.allAssets||r.nearbyAssets||[], nearest=assets.length?[...assets].sort((a,b)=>(a.dist_km??Infinity)-(b.dist_km??Infinity))[0]:null;
+  const isUprange=String(r.phase||ctx.phase||'').toUpperCase()==='UPRANGE';
+  const propAsset=assets.reduce((sum,a)=>sum+Number(a.propExp||0),0);
+  const louAsset=assets.reduce((sum,a)=>sum+Number(a.louExp||0),0);
+  const envAsset=assets.reduce((sum,a)=>sum+Number(a.envExp||0),0);
+  const band=screeningBandCode(r.compliance);
+  const notes=[
+    'PRE_RELEASE',`SCREENING_BAND=${band}`,`MODEL_BUFFER_110_AUD=${Math.round(r.MODEL_BUFFER||r.MPL_TOTAL*1.10)}`,
+    `DATA_MODE=${MODEL_META.dataMode}`,`RUNTIME_HASH=${MODEL_META.runtimeHash}`,
+    `HVA_SELECTION=${r.evidenceBoundary?.hvaSelection||'ROMER_SCREENING_HEURISTIC'}`,
+    `IMPACT_ISOPLETH_1E-7=${r.evidenceBoundary?.impactIsopleth10e7?'SUPPLIED':'NOT_SUPPLIED'}`,
+    ctx.note||''
+  ].filter(Boolean).join(' | ');
+  return exactSchemaObject(MISSION_LOG_FIELDS,{
+    RunID:runId,Timestamp:timestamp,OperatorID:S.activeOperator?.id||'OP-001',OperatorName:S.activeOperator?.name||'N. Römer',
+    SiteID:site?.id||'NOT PROVIDED',SiteName:site?.name||'NOT PROVIDED',SiteLat:site?.lat??'',SiteLon:site?.lon??'',
+    VehicleID:vehicle?.id||'NOT PROVIDED',VehicleName:vehicle?.name||'NOT PROVIDED',TransitType:transit?.id||ctx.transitType||'NOT PROVIDED',
+    FailureMode:ctx.failureMode||S.failModeIds?.join(',')||'NOT PROVIDED',FailureTiming:ctx.failureTiming||S.failMode||'NOT PROVIDED',
+    FailureTime_Tplus_s:Number.isFinite(ctx.failureTime)?Number(ctx.failureTime.toFixed(1)):Number.isFinite(S.lastRun?.failureTime)?Number(S.lastRun.failureTime.toFixed(1)):'',
+    FlightPhase:r.phase||ctx.phase||'NOT PROVIDED',IIP_Lat:Number.isFinite(ctx.iipLat)?Number(ctx.iipLat.toFixed(6)):Number.isFinite(simData?.iipLat)?Number(simData.iipLat.toFixed(6)):'',
+    IIP_Lon:Number.isFinite(ctx.iipLon)?Number(ctx.iipLon.toFixed(6)):Number.isFinite(simData?.iipLon)?Number(simData.iipLon.toFixed(6)):'',
+    ImpactZoneType:r.zone||ctx.zone||'NOT PROVIDED',ImpactZoneName:r.zoneData?.name||ctx.zoneName||'NOT PROVIDED',PopDensity_km2:r.Dpop??'',Ac_m2:Number.isFinite(r.Ac)?Math.round(r.Ac):'',
+    CAS_Primary:r.CAS_primary??0,CAS_Secondary:r.CAS_secondary??0,CAS_Total:r.CAS_total??0,MPL_Casualties:Math.round(r.MPL_CAS||0),
+    MPL_Property_Bounding:isUprange?Math.round((r.MPL_CAS||0)*ASA.PROPERTY_PCT):0,MPL_Property_Asset:Math.round(propAsset),MPL_Property_Used:Math.round(r.MPL_PD||0),
+    MPL_LOU_GDP:isUprange?Math.round((r.CAS_total||0)*(GDP_TABLE[site?.cc]||GDP_TABLE.GLB)):0,MPL_LOU_Asset:Math.round(louAsset),MPL_LOU_Used:Math.round(r.MPL_LOU||0),
+    MPL_ENV_Bounding:isUprange?Math.round(ASA.ENV_BOUNDING):0,MPL_ENV_Asset:Math.round(envAsset),MPL_ENV_Used:Math.round(r.MPL_ENV||0),MPL_TOTAL:Math.round(r.MPL_TOTAL||0),
+    CurrencyYear:2024,NearestAssetID:nearest?.id||'',NearestAssetKm:nearest?.dist_km??'',RunStatus:'COMPLETE',LoggedToSheets:false,
+    PDFExported:Boolean(S.lastRun?.pdfExported),AchillesBridgeRef:S.achillesRef||'',Notes:notes
+  });
+}
+function buildAssetExposureRows(r,runId){
+  const iipLat=Number(simData?.iipLat),iipLon=Number(simData?.iipLon),now=new Date().toISOString();
+  return (r.allAssets||r.nearbyAssets||[]).map(a=>{
+    const dist=Number.isFinite(iipLat)&&Number.isFinite(iipLon)?haversine(iipLat,iipLon,a.lat,a.lon):'';
+    return exactSchemaObject(ASSET_EXPOSURE_FIELDS,{
+      ExposureID:`${runId}-${a.id}`,RunID:runId,AssetID:a.id,AssetName:a.name,DistFromIIP_km:Number.isFinite(dist)?Number(dist.toFixed(3)):'',
+      WithinScreeningHeuristic:Boolean(a.inCorridor),PropertyLoss_AUD:Math.round(a.propExp||0),LossOfUse_AUD:Math.round(a.louExp||0),
+      EnvCleanup_AUD:Math.round(a.envExp||0),TotalExposure_AUD:Math.round((a.propExp||0)+(a.louExp||0)+(a.envExp||0)),LastUpdated:now
+    });
+  });
+}
+function buildBridgeW5Update(r){
+  return exactSchemaObject(BRIDGE_W5_UPDATE_FIELDS,{
+    MPL_RunID:S.lastRun?.runId||'',MPL_Screening_Band:screeningBandCode(r.compliance),MPL_Total_AUD:Math.round(r.MPL_TOTAL||0),
+    MPL_Model_Buffer_AUD:Math.round(r.MODEL_BUFFER||r.MPL_TOTAL*1.10),BridgeStatus:'MPL_SCREENING_COMPLETE',LastUpdated:new Date().toISOString(),UpdatedBy:S.activeOperator?.id||'OP-001'
+  });
+}
+function buildMplAchillesBridgeRow(r){
+  const runId=S.lastRun?.runId||`${getRunPrefix()}-${Date.now()}`;
+  return exactSchemaObject(MPL_ACHILLES_BRIDGE_FIELDS,{
+    BridgeID:`MPL-${runId}`,ACHILLESRowRef:S.achillesRef||'',MPL_RunID:runId,MPL_Screening_Band:screeningBandCode(r.compliance),
+    MPL_Total_AUD:Math.round(r.MPL_TOTAL||0),MPL_Model_Buffer_AUD:Math.round(r.MODEL_BUFFER||r.MPL_TOTAL*1.10),MPL_Calc_Date:new Date().toISOString(),
+    MPL_Method_Ref:'ASA_MPL_2019_SCREENING',LaunchSiteID:S.site?.id||'',VehicleID:S.vehicle?.id||'',FlightPhase_Worst:r.phase||'',CAS_Total_Worst:r.CAS_total||0,
+    W6_UpdateRequired:(r.allAssets||r.nearbyAssets||[]).length?'YES':'NO'
+  });
+}
+function queueOperatorWriteBundle(writes,label='MPL workbook write'){
+  const receipt={id:`WRITE-${Date.now()}`,state:'PENDING_OPERATOR_TRANSPORT',label,createdAt:new Date().toISOString(),operatorId:S.activeOperator?.id||'OP-001',writes};
+  S.pendingWrites=Array.isArray(S.pendingWrites)?S.pendingWrites:[];S.pendingWrites.push(receipt);S.pendingWrites=S.pendingWrites.slice(-20);S.lastWriteReceipt=receipt;
+  try{localStorage.setItem('romerMplPendingWrites',JSON.stringify(S.pendingWrites));}catch{}
+  return receipt;
+}
+function prepareRunWorkbookWrites(r=S.lastRun?.result){
+  if(!S.lastRun||!r){toast('No run data to prepare');return null;}
+  const runId=S.lastRun.runId,missionRow=buildMissionLogRow(r),exposureRows=buildAssetExposureRows(r,runId);
+  const writes=[
+    {action:'append',tab:'Mission_Log',schema:MISSION_LOG_FIELDS,row:missionRow},
+    {action:'batch_append',tab:'Asset_Exposures',schema:ASSET_EXPOSURE_FIELDS,rows:exposureRows},
+    {action:'append',tab:'BRIDGE_MPL_to_ACHILLES',schema:MPL_ACHILLES_BRIDGE_FIELDS,row:buildMplAchillesBridgeRow(r)}
+  ];
+  if(S.achillesRef)writes.push({action:'update_bridge',tab:'BRIDGE_W5_Targets',bridgeId:S.achillesRef,schema:BRIDGE_W5_UPDATE_FIELDS,data:buildBridgeW5Update(r)});
+  const receipt=queueOperatorWriteBundle(writes,'MPL run workbook write');
+  S.lastRun.writeReceiptId=receipt.id;
+  return receipt;
+}
 function logMissionRun(){
-  if(!S.lastRun){toast('No run data to log');return;}
-  const r=S.lastRun.result;
-  // Schema matches canonical Mission_Log tab
-  const data={
-    RunID:S.lastRun.runId, Timestamp:S.lastRun.timestamp,
-    OperatorID:S.activeOperator?.id||'OP-001', OperatorName:S.activeOperator?.name||'N. Römer',
-    SiteID:S.site?.id||'NOT PROVIDED', SiteName:S.site?.name||'NOT PROVIDED',
-    SiteLat:S.site?.lat||0, SiteLon:S.site?.lon||0,
-    VehicleID:S.vehicle?.id||'NOT PROVIDED', VehicleName:S.vehicle?.name||'NOT PROVIDED',
-    TransitType:S.transit?.id||'NOT PROVIDED',
-    FailureMode:S.failModeIds.join(',')||'NOT PROVIDED',
-    FailureTiming:S.failMode,
-    FailureTime_Tplus_s:S.lastRun.failureTime?.toFixed(1)||'0',
-    FlightPhase:r.phase,
-    IIP_Lat:simData.iipLat?.toFixed(6)||'0',
-    IIP_Lon:simData.iipLon?.toFixed(6)||'0',
-    ImpactZoneType:r.zone,
-    ImpactZoneName:r.zoneData.name,
-    PopDensity_km2:r.Dpop, Ac_m2:Math.round(r.Ac),
-    CAS_Primary:r.CAS_primary, CAS_Secondary:r.CAS_secondary,
-    CAS_Total:r.CAS_total,
-    MPL_Casualties:Math.round(r.MPL_CAS),
-    MPL_Property_Bounding:Math.round(r.MPL_CAS * ASA.PROPERTY_PCT),
-    MPL_Property_Asset:Math.round((r.corridorHVAs||r.allAssets||r.nearbyAssets||[]).reduce((s,a)=>s+(a.propExp||0),0)),
-    MPL_Property_Used:Math.round(r.MPL_PD),
-    MPL_LOU_GDP:Math.round(r.CAS_total*(GDP_TABLE[S.site?.cc]||GDP_TABLE.GLB)),
-    MPL_LOU_Asset:Math.round((r.corridorHVAs||r.allAssets||r.nearbyAssets||[]).reduce((s,a)=>s+(a.louExp||0),0)),
-    MPL_LOU_Used:Math.round(r.MPL_LOU),
-    MPL_ENV_Bounding:Math.round(ASA.ENV_BOUNDING),
-    MPL_ENV_Asset:Math.round((r.corridorHVAs||r.allAssets||r.nearbyAssets||[]).reduce((s,a)=>s+(a.envExp||0),0)),
-    MPL_ENV_Used:Math.round(r.MPL_ENV),
-    MPL_TOTAL:Math.round(r.MPL_TOTAL),
-    CurrencyYear:2024,
-    NearestAssetID:r.allAssets?.[0]?.id||r.nearbyAssets?.[0]?.id||'',
-    NearestAssetKm:r.allAssets?.[0]?.dist_km||r.nearbyAssets?.[0]?.dist_km||0,
-    CorridorAssetCount:(r.corridorHVAs||[]).filter(a=>a.inCorridor).length,
-    RunStatus:'COMPLETE',
-    LoggedToSheets:true, PDFExported:S.lastRun.pdfExported||false,
-    AchillesBridgeRef:S.achillesRef||'',
-    Notes:`PRE-RELEASE | ${S.site?.short||'NOT PROVIDED'} | ${S.vehicle?.name||'NOT PROVIDED'} | ${r.compliance}`,
-    OperatorID:   S.activeOperator?.id   || 'OP-001',
-    OperatorName: S.activeOperator?.name || 'N. Römer',
-  };
-  logToSheets(data);
-  writeAchillesBridge(r);
+  const receipt=prepareRunWorkbookWrites();
+  if(!receipt)return;
+  toast(`Workbook write prepared — ${receipt.id} · operator transport required`);
+  if(S.webhookUrl)dispatchWebhook(S.lastRun);
 }
 
-// Write MPL result back to ACHILLES W5 bridge (BRIDGE_W5_Targets tab)
-async function writeAchillesBridge(r) {
-  if (!S.achillesRef || !APPS_SCRIPT) return;
-  const bridgeData = {
-    MPL_RunID: S.lastRun?.runId,
-    MPL_Compliance: r.compliance.includes('LOWER')?'LOWER_SCREENING_BAND':r.compliance.includes('UPPER')?'UPPER_REVIEW_BAND':'REVIEW',
-    MPL_Total_AUD: Math.round(r.MPL_TOTAL),
-    MPL_Model_Buffer_110pct: Math.round(r.MODEL_BUFFER || r.MPL_TOTAL * 1.1),
-    MPL_CAS_AUD: Math.round(r.MPL_CAS),
-    MPL_PD_AUD:  Math.round(r.MPL_PD),
-    MPL_LOU_AUD: Math.round(r.MPL_LOU),
-    MPL_ENV_AUD: Math.round(r.MPL_ENV),
-    CAS_Total: r.CAS_total,
-    FlightPhase: r.phase,
-    ImpactZone: r.zoneData.name,
-    BridgeStatus: 'MPL_COMPLETE',
-    Timestamp: new Date().toISOString(),
-  };
-  try {
-    await fetch(APPS_SCRIPT, {
-      method:'POST',
-      body: JSON.stringify({ action:'update_bridge', tab:'BRIDGE_W5_Targets', bridgeId: S.achillesRef, data: bridgeData })
-    });
-    // Update bridge panel badge for all 6 targets
-    const idxMap = {'BW5-001':'ach-001','BW5-002':'ach-002','BW5-003':'ach-003','BW5-004':'ach-004','BW5-005':'ach-005','BW5-006':'ach-006'};
-    const achEl = document.getElementById(idxMap[S.achillesRef] || '');
-    if(achEl) {
-      const badge = achEl.querySelector('.at-badge');
-      if(badge) {
-        badge.textContent=r.compliance.includes('LOWER')?'MPL LOWER BAND':r.compliance.includes('UPPER')?'MPL UPPER REVIEW':'MPL REVIEW';
-        badge.style.color=r.compliance.includes('LOWER')?'var(--green)':r.compliance.includes('UPPER')?'var(--orange)':'var(--gold)';
-      }
-    }
-    toast('✓ ACHILLES W5 bridge updated with MPL result');
-    // Also write to W6 (Asset Exposure) if endpoint available
-    writeAchillesW6(r);
-  } catch(e) { /* silent */ }
+// W5 bridge updates are generated by buildBridgeW5Update() and queued with the operator-write bundle.
+function writeAchillesBridge(r){
+  if(!S.achillesRef)return null;
+  const receipt=queueOperatorWriteBundle([{action:'update_bridge',tab:'BRIDGE_W5_Targets',bridgeId:S.achillesRef,schema:BRIDGE_W5_UPDATE_FIELDS,data:buildBridgeW5Update(r)}],'ACHILLES W5 bridge write');
+  return receipt;
 }
 
 // ACHILLES W6 — Asset Exposure writeback (separate Achilles sheet)
@@ -3814,13 +3842,6 @@ async function dispatchWebhook(runObj) {
     casualties:r.CAS_total,modelCheck:r.compliance,corridorAssets:(r.corridorHVAs||[]).filter(a=>a.inCorridor).length,achillesRef:S.achillesRef||null};
   try { const response=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json','X-Romer-Event':'mpl_run_complete'},body:JSON.stringify(payload),signal:AbortSignal.timeout(7000)}); if(!response.ok)throw new Error(`HTTP ${response.status}`); toast(`✓ Webhook acknowledged — HTTP ${response.status}`); }
   catch(e){ console.warn('[Römer Webhook] delivery unverified:',e.message); toast(`Webhook attempted; no verified acknowledgement — ${e.message}`); }
-}
-
-/* Wire webhook into logMissionRun */
-const _origLogMissionRun = logMissionRun;
-function logMissionRun() {
-  _origLogMissionRun();
-  if(S.lastRun) dispatchWebhook(S.lastRun);
 }
 
 /* ─── Mission Event Timeline ─── */
@@ -3907,9 +3928,9 @@ function exportPDF() {
   h2{font-size:11pt;font-weight:600;margin:5mm 0 2mm;color:#333}
   .compliance{display:inline-block;padding:2mm 6mm;border-radius:3px;font-family:'Orbitron',sans-serif;
     font-size:9pt;letter-spacing:.1em;font-weight:600;margin:3mm 0 5mm;
-    background:${r.compliance.includes('PASS')?'#e8f5ee':'#fff8e0'};
-    color:${r.compliance.includes('PASS')?'#1a7a40':'#8a6010'};
-    border:1px solid ${r.compliance.includes('PASS')?'#a0d8b4':'#d4aa40'}}
+    background:${r.compliance.includes('LOWER')?'#e8f5ee':r.compliance.includes('UPPER')?'#fff0e0':'#fff8e0'};
+    color:${r.compliance.includes('LOWER')?'#1a7a40':r.compliance.includes('UPPER')?'#a44a00':'#8a6010'};
+    border:1px solid ${r.compliance.includes('LOWER')?'#a0d8b4':r.compliance.includes('UPPER')?'#e3a06a':'#d4aa40'}}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:3mm;margin:3mm 0}
   .cell{background:#f7f7f7;border:1px solid #ddd;border-radius:2px;padding:2mm 3mm}
   .cell-k{font-size:7pt;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1mm}
@@ -6130,7 +6151,7 @@ function clearRunHistory() {
 
 function exportRunsCSV() {
   if(!RUN_HISTORY.length) { toast('No runs to export'); return; }
-  const headers = ['RunID','Timestamp','Site','Vehicle','MPL_Total','Model_Buffer','CAS_Total','Compliance'];
+  const headers = ['RunID','Timestamp','Site','Vehicle','MPL_Total','Model_Buffer','CAS_Total','Screening_Band'];
   const csv = [headers.join(','), ...RUN_HISTORY.map(r =>
     [r.runId, r.ts, r.site||'', r.vehicle||'', r.result?.MPL_TOTAL||0,
      r.result?.MODEL_BUFFER||0, r.result?.CAS_total||0, `"${r.result?.compliance||''}"`].join(',')
@@ -6217,7 +6238,7 @@ function runBatch() {
   BATCH_QUEUE.forEach(item=>{
     const fmIds=item.failMode==='ALL'?FMODES.map(f=>f.id):[item.failMode];
     const r=calculateMPL({vehicle:item.vehicle,site:item.site,phase:'ascent',zone:item.zone,failModes:fmIds,isUprange:true});
-    batchResults.push({label:item.label,site:item.site.short,vehicle:item.vehicle.name,zone:item.zone,failMode:item.failMode,
+    batchResults.push({label:item.label,site:item.site.short,vehicle:item.vehicle.name,siteObj:item.site,vehicleObj:item.vehicle,result:r,zone:item.zone,failMode:item.failMode,
       mpl:Math.round(r.MPL_TOTAL),buffer:Math.round(r.MODEL_BUFFER),cas:r.CAS_total,pd:Math.round(r.MPL_PD),
       lou:Math.round(r.MPL_LOU),env:Math.round(r.MPL_ENV),compliance:r.compliance,
       nearestAsset:r.allAssets?.[0]?.name||'NOT PROVIDED',proxWeight:r.allAssets?.[0]?.proxWeight?.toFixed(3)||'NOT PROVIDED'});
@@ -6271,36 +6292,25 @@ function runBatch() {
 
 function exportBatchCSV() {
   if(!batchResults.length) return;
-  const hdr=['Scenario','Site','Vehicle','Zone','FailMode','MPL_AUD','BUFFER_AUD','CAS','PD','LOU','ENV','Compliance','TopHVA','ProxW'];
+  const hdr=['Scenario','Site','Vehicle','Zone','FailMode','MPL_AUD','BUFFER_AUD','CAS','PD','LOU','ENV','Screening_Band','TopHVA','ProxW'];
   const csv=[hdr.join(','),...batchResults.map(r=>[r.label,r.site,r.vehicle,r.zone,r.failMode,r.mpl,r.buffer,r.cas,r.pd,r.lou,r.env,`"${r.compliance}"`,r.nearestAsset,r.proxWeight].join(','))].join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download=`Romer_Batch_${getRunPrefix()}_${Date.now()}.csv`; a.click();
   toast('Batch CSV downloaded');
 }
 
-async function logBatchToSheets() {
-  if(!batchResults.length||!APPS_SCRIPT){toast('No results or no Apps Script');return;}
-  const btn=document.getElementById('batch-log-btn'); btn.disabled=true; btn.textContent='Logging…';
-  try {
-    // PRE-RELEASE: use batch_append for single POST instead of N individual calls
-    const rows = batchResults.map(r=>({
-      RunID:`${getRunPrefix()}-BATCH-${Date.now()}`,
-      Timestamp:new Date().toISOString(),
-      Site:r.site, Vehicle:r.vehicle,
-      Zone:r.zone, FailureMode:r.failMode,
-      MPL_Total:r.mpl, Model_Buffer:r.buffer,
-      CAS_Total:r.cas, Compliance:r.compliance,
-      OperatorID:S.activeOperator?.id||'OP-001',
-      OperatorName:S.activeOperator?.name||'N. Römer',
-      Notes:`PRE-RELEASE BATCH | ${r.label}`,
-    }));
-    await fetch(APPS_SCRIPT, {
-      method:'POST',
-      body: JSON.stringify({ action:'batch_append', tab:'Mission_Log', rows, operatorId: S.activeOperator?.id||'OP-001' })
-    });
-    toast(`✓ ${batchResults.length} batch runs logged (batch_append)`);
-  } catch(e){toast(`Batch log failed — ${e.message}`);}
-  btn.disabled=false; btn.textContent='Log to Sheets';
+function logBatchToSheets(){
+  if(!batchResults.length){toast('No batch results to prepare');return;}
+  const now=new Date().toISOString();
+  const missionRows=batchResults.map((item,index)=>buildMissionLogRow(item.result,{
+    runId:`${getRunPrefix()}-BATCH-${Date.now()}-${String(index+1).padStart(3,'0')}`,timestamp:now,site:item.siteObj,vehicle:item.vehicleObj,
+    transitType:'BATCH',failureMode:item.failMode,failureTiming:'BATCH',phase:item.result?.phase||'UPRANGE',zone:item.zone,note:`BATCH_SCENARIO=${item.label}`
+  }));
+  const writes=[{action:'batch_append',tab:'Mission_Log',schema:MISSION_LOG_FIELDS,rows:missionRows}];
+  const receipt=queueOperatorWriteBundle(writes,'MPL batch workbook write');
+  const btn=document.getElementById('batch-log-btn');if(btn)btn.textContent='Workbook Write Prepared';
+  toast(`Batch workbook write prepared — ${receipt.id} · operator transport required`);
+  return receipt;
 }
 
 function openAI() {
