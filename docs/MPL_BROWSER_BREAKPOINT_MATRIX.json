@@ -1,0 +1,51 @@
+{
+  "schema": "romer.mpl.browser_breakpoints/1",
+  "stage": "PRE_RELEASE",
+  "hardBreaks": [
+    "JavaScript syntax error",
+    "WebGL context unavailable or lost",
+    "zero-size globe canvas",
+    "camera radius at or below Earth surface",
+    "non-finite MPL result",
+    "uncaught ReferenceError, SyntaxError or TypeError"
+  ],
+  "softBreaks": [
+    "panel state changes without canvas resize",
+    "view state changes but target surface remains hidden or zero-size",
+    "control click does not bind state",
+    "result surface opens with undefined or NaN values",
+    "Object view opens without a selected site",
+    "mobile panel consumes the globe instead of overlaying it",
+    "reset/new mission returns ambiguous dash placeholders",
+    "stale regulatory or provider wording remains visible",
+    "sweep or batch executes but renders no finite rows"
+  ],
+  "testedPaths": [
+    "boot.desktop",
+    "boot.mobile",
+    "panel.toggle",
+    "camera.zoom_button",
+    "camera.hard_floor",
+    "camera.reset",
+    "view.object_without_site",
+    "mission.site_select",
+    "mission.confirm_site",
+    "mission.transit_select",
+    "mission.vehicle_select",
+    "mission.failure_mode_select",
+    "view.object",
+    "view.orbit",
+    "view.globe_restore",
+    "advanced.open",
+    "sweep.run",
+    "vehicle_editor.open_close",
+    "settings.open_close",
+    "runs.open_close",
+    "batch.open_run_close",
+    "simulation.start",
+    "simulation.failure_result",
+    "evidence_review.render",
+    "mission.reset",
+    "visible_nonfinite_scan"
+  ]
+}
