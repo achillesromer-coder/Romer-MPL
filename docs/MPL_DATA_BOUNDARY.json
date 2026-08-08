@@ -1,0 +1,24 @@
+{
+  "schema": "romer.mpl.data_boundary/1",
+  "stage": "PRE_RELEASE",
+  "browserReadMode": "CONTROLLED_EMBEDDED_SNAPSHOT",
+  "canonicalWorkbookId": "1uXs-uPDCN8xNFErkAOrCEeYv0ctzoZb5XUYop5UEBvE",
+  "appsScript": {
+    "role": "OPERATOR_WRITE_TRANSPORT",
+    "publicBrowserReadDependency": false,
+    "reason": "Current endpoint does not provide a browser-acceptable CORS response for anonymous static runtime reads."
+  },
+  "snapshotSets": [
+    "Launch_Sites",
+    "Vehicles",
+    "MPL_Constants",
+    "GDP_Table",
+    "Population_Zones",
+    "Failure_Modes",
+    "Operators",
+    "High_Value_Assets",
+    "BRIDGE_W5_Targets",
+    "MPL_Config"
+  ],
+  "promotionRequirement": "Controlled workbook-to-browser snapshot generation must preserve schema, generated-at timestamp and source hash before regulatory-parity claims are considered."
+}
