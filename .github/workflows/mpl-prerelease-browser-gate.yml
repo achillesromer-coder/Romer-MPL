@@ -37,6 +37,15 @@ jobs:
           CANDIDATE_URL: http://127.0.0.1:4173/index.html
         run: node tests/browser_globe_probe.mjs
 
+      - name: Verify hard-surface object and orbit rendering
+        id: deep_render
+        continue-on-error: true
+        env:
+          CANDIDATE_URL: http://127.0.0.1:4173/index.html
+        run: |
+          mkdir -p artifacts/browser-globe
+          node tests/browser_deep_render_probe.mjs | tee artifacts/browser-globe/deep-render-receipt.log
+
       - name: Verify workbook write-receipt control in Chromium
         id: write_receipt
         continue-on-error: true
@@ -50,6 +59,7 @@ jobs:
         if: always()
         env:
           BROWSER_OUTCOME: ${{ steps.browser.outcome }}
+          DEEP_OUTCOME: ${{ steps.deep_render.outcome }}
           WRITE_OUTCOME: ${{ steps.write_receipt.outcome }}
         run: |
           mkdir -p artifacts/browser-globe
@@ -62,13 +72,15 @@ jobs:
           summary_path=Path('artifacts/browser-globe/summary.json')
           rows=json.loads(summary_path.read_text()) if summary_path.exists() else []
           candidate=[r for r in rows if r.get('target',{}).get('name','').startswith('candidate-')]
-          passed=os.environ.get('BROWSER_OUTCOME')=='success' and os.environ.get('WRITE_OUTCOME')=='success'
+          passed=all(os.environ.get(k)=='success' for k in ('BROWSER_OUTCOME','DEEP_OUTCOME','WRITE_OUTCOME'))
           receipt={
             'schema':'romer.mpl.browser_gate/2',
             'stage':'PRE_RELEASE',
             'gitSha':os.environ.get('GITHUB_SHA'),
             'status':'PASS' if passed else 'FAIL',
             'candidateSha256':hashlib.sha256(source).hexdigest(),
+            'comprehensiveBrowser':os.environ.get('BROWSER_OUTCOME'),
+            'deepRender':os.environ.get('DEEP_OUTCOME'),
             'workbookWriteReceipt':os.environ.get('WRITE_OUTCOME'),
             'targets':[]
           }
@@ -98,9 +110,10 @@ jobs:
           retention-days: 30
 
       - name: Enforce browser acceptance gate
-        if: steps.browser.outcome != 'success' || steps.write_receipt.outcome != 'success'
+        if: steps.browser.outcome != 'success' || steps.deep_render.outcome != 'success' || steps.write_receipt.outcome != 'success'
         run: |
           echo 'MPL pre-release browser acceptance failed.' >&2
           cat artifacts/browser-globe/summary.json || true
+          cat artifacts/browser-globe/deep-render-receipt.log || true
           cat artifacts/browser-globe/workbook-write-receipt.log || true
           exit 1
