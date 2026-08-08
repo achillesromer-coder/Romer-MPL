@@ -1,4 +1,4 @@
-name: MPL Browser Globe Regression
+name: MPL Browser Regression
 
 on:
   pull_request:
@@ -9,50 +9,44 @@ permissions:
   contents: read
 
 jobs:
-  browser-globe:
+  browser-runtime:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
       - name: Install Playwright Chromium
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-
-      - name: Start candidate release server
+      - name: Start candidate server
         run: |
           python -m http.server 4173 --bind 127.0.0.1 > /tmp/mpl-http.log 2>&1 &
           echo $! > /tmp/mpl-http.pid
-          for i in {1..20}; do curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null && exit 0; sleep .25; done
+          for i in {1..30}; do curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null && exit 0; sleep .25; done
           cat /tmp/mpl-http.log
           exit 1
-
-      - name: Probe candidate and live globe runtimes
+      - name: Probe desktop and mobile execution paths
         id: probe
         continue-on-error: true
         env:
           CANDIDATE_URL: http://127.0.0.1:4173/index.html
         run: node tests/browser_globe_probe.mjs
-
-      - name: Archive exact tested release source
+      - name: Archive exact tested source and browser receipts
         if: always()
         run: |
-          mkdir -p artifacts/browser-globe
-          cp index.html artifacts/browser-globe/release-index.html
-          sha256sum index.html | tee artifacts/browser-globe/release-index.sha256
-
+          mkdir -p artifacts/browser-mpl
+          cp index.html artifacts/browser-mpl/tested-index.html
+          sha256sum index.html | tee artifacts/browser-mpl/tested-index.sha256
       - name: Upload browser receipts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpl-browser-globe-${{ github.sha }}
-          path: artifacts/browser-globe
+          name: mpl-browser-regression-${{ github.sha }}
+          path: artifacts/browser-mpl
           if-no-files-found: error
           retention-days: 30
-
-      - name: Enforce candidate globe regression gate
+      - name: Enforce browser regression gate
         if: steps.probe.outcome != 'success'
         run: |
-          echo 'Candidate front-facing globe regression detected.' >&2
-          cat artifacts/browser-globe/summary.json || true
+          echo 'MPL desktop/mobile runtime regression detected.' >&2
+          cat artifacts/browser-mpl/summary.json || true
           exit 1
