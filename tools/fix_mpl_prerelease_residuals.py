@@ -21,6 +21,12 @@ s=s.replace('async async function runMission(){','async function runMission(){')
 if 'await zoomToSite(S.site);' in s and 'async function runMission(){' not in s:
     s=s.replace('function runMission(){','async function runMission(){',1)
 
+# The legacy splash implementation was removed during hardening, but one load binding survived.
+# Preserve the established boot entry point by making runSplash a thin named alias to bootApp.
+if "window.addEventListener('load',runSplash);" in s and not re.search(r'function\s+runSplash\s*\(',s):
+    anchor="window.addEventListener('load',runSplash);"
+    s=s.replace(anchor,"async function runSplash(){ return bootApp(); }\n"+anchor,1)
+
 # Pre-release settings use a stage, not a semantic version.
 s=s.replace("version: 'PRE-RELEASE',","stage: 'PRE_RELEASE',")
 s=s.replace("toast(`✓ Config imported — v${config.version||'?'} from ${new Date(config.exported||0).toLocaleDateString()}`);",
@@ -61,6 +67,8 @@ checks={
 }
 for label,pat in checks.items():
     if re.search(pat,s): raise SystemExit(f'residual invariant failed: {label}')
+if "window.addEventListener('load',runSplash);" in s and not re.search(r'function\s+runSplash\s*\(',s):
+    raise SystemExit('residual invariant failed: unresolved splash boot binding')
 
 p.write_text(s,encoding='utf-8')
 print('residual pre-release repairs applied')
