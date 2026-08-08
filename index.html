@@ -2417,6 +2417,7 @@ function sanitizeRow(row) {
 
 /* Camera geometry invariant. ASA MPL does not prescribe a UI camera altitude; Römer enforces a 1 km stand-off so the camera cannot cross the Earth surface. */
 const EARTH_RADIUS_KM=6371.0088,CAMERA_MIN_ALTITUDE_KM=1,CAMERA_MAX_ALTITUDE_KM=40000,CAMERA_INITIAL_ALTITUDE_KM=11500,CAMERA_SITE_ALTITUDE_KM=80,SURFACE_PROXIMITY_KM=150;
+const GLOBE_SURFACE_MODE='HARD_OPAQUE_EARTH';
 /* ─── APPLICATION STATE ─── */
 const S = {
   step: 1, view: 'globe',
@@ -4688,6 +4689,7 @@ async function loadTopoJSONMap() {
 }
 
 /* Manual diagnostic only: probes optional NASA/NOAA imagery without affecting controlled boot. */
+/* Manual diagnostic only: probes optional NASA/NOAA imagery without affecting controlled boot. */
 function loadHDGlobeTexture() {
   const badge=document.getElementById('globe-hd-badge');
   if(badge){ badge.textContent='LOADING HD…'; badge.classList.add('show'); }
@@ -5132,7 +5134,9 @@ function initGlobe(){
   globe=new THREE.Mesh(new THREE.SphereGeometry(1,128,128),new THREE.MeshPhongMaterial({
     map:mapTex,specularMap:mapTex,specular:new THREE.Color(0x2a4060),shininess:35,
     emissive:new THREE.Color(0x040810),emissiveIntensity:0.25,
+    transparent:false,opacity:1,depthTest:true,depthWrite:true,side:THREE.FrontSide,
   }));
+  globe.userData.surfaceMode=GLOBE_SURFACE_MODE;
   scene.add(globe);
   buildDataOverlay();
 
@@ -7080,7 +7084,7 @@ function bootApp(){
   if(!S.activeOperator) S.activeOperator=S.operators.find(o=>o.id==='OP-001')||S.operators[0];
   renderSites(); initGlobe(); computeRuntimeReceiptHash(); updateModelReceipt();
   setTimeout(applySettings,900); setTimeout(renderOperatorBadge,500);
-  S.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';MODEL_META.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';
+  S.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';MODEL_META.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';MODEL_META.enrichmentMode='CONTROLLED_EMBEDDED_ONLY';
   readShareHash();
 }
 const SPLASH_STEPS=[{id:'li0',t:0},{id:'li1',t:500},{id:'li2',t:1050},{id:'li3',t:1650},{id:'li4',t:2200},{id:'li5',t:2750}];
