@@ -1,0 +1,1 @@
+Validation entrypoint: open a pull request from `mpl/pre-release-hardening-2026-08-09` to `main`; required workflows must pass before merge.
