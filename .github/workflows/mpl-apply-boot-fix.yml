@@ -1,0 +1,64 @@
+name: MPL Apply Deterministic Boot Repair
+
+on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-09]
+    paths:
+      - tools/fix_mpl_boot_and_enrichment.py
+      - .github/workflows/mpl-apply-boot-fix.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-09
+          fetch-depth: 0
+      - name: Apply deterministic boot boundary
+        run: |
+          python tools/fix_mpl_boot_and_enrichment.py index.html
+          python tools/fix_mpl_prerelease_residuals.py index.html
+          python tools/fix_mpl_transport_and_reporting.py index.html
+          python tools/fix_mpl_screened_asset_summary.py index.html
+          python tools/fix_mpl_static_audit_prerelease.py tools/mpl_static_audit.py
+      - name: Validate boot and source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          assert 'const wait=milliseconds=>new Promise' in s
+          assert "MODEL_META.enrichmentMode='CONTROLLED_EMBEDDED_ONLY'" in s
+          assert "S.enrichmentMode='CONTROLLED_EMBEDDED_ONLY'" in s
+          assert 'await loadSheets();' in s
+          assert 'async function runSplash(){' in s
+          for marker in ['setTimeout(fetchLiveGDP','setTimeout(fetchLivePopDensity','setTimeout(fetchJPLHorizons','fetchLiveTLEs().then','setTimeout(loadHDGlobeTexture']:
+            assert marker not in s,marker
+          PY
+          node --check /tmp/mpl-inline.js
+          node tests/mpl_runtime_smoke.js index.html
+          python tools/mpl_static_audit.py index.html --output /tmp/mpl-audit.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/mpl-audit.json'))
+          assert r['finding_count']==0,r['findings']
+          PY
+          git diff --check
+      - name: Commit repaired runtime
+        run: |
+          git config user.name 'Römer MPL Boot Gate'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html tools/mpl_static_audit.py
+          if git diff --cached --quiet; then
+            echo 'Boot repair already reconciled.'
+          else
+            git commit -m 'Make MPL pre-release boot deterministic'
+            git push origin HEAD:mpl/pre-release-hardening-2026-08-09
+          fi
