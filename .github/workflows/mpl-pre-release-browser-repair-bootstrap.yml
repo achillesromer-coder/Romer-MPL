@@ -1,0 +1,49 @@
+name: MPL Pre-release Browser Repair Bootstrap
+
+on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-08]
+    paths: [.github/workflows/mpl-pre-release-browser-repair-bootstrap.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  synchronise-repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-08
+          fetch-depth: 0
+      - name: Retrieve browser-repaired executable and probe
+        run: |
+          curl --fail --location --retry 3 'https://drive.usercontent.google.com/download?id=1Bt4ELuR_RVay2s-GPxFfLX2Ef--lAEBP&export=download&confirm=t' -o /tmp/index.html
+          curl --fail --location --retry 3 'https://drive.usercontent.google.com/download?id=13i4-ahPRST38hJgFYe3OotoHx6gm9STI&export=download&confirm=t' -o /tmp/browser_globe_probe.mjs
+          test "$(stat -c%s /tmp/index.html)" -eq 427200
+          test "$(stat -c%s /tmp/browser_globe_probe.mjs)" -eq 17157
+          echo '8321f8b0a3dcf877fbf25cfbe5d98b6b2aa25e61709dd487c5e610a0885715df  /tmp/index.html' | sha256sum --check
+          echo '11733a402096722e03acb9c908fecd66748a9376173cdf6bfa8cb2a6f166851d  /tmp/browser_globe_probe.mjs' | sha256sum --check
+      - name: Synchronise exact candidate and receipt
+        run: |
+          cp /tmp/index.html index.html
+          cp /tmp/browser_globe_probe.mjs tests/browser_globe_probe.mjs
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path('docs/MPL_PRE_RELEASE_STATE.json')
+          state=json.loads(path.read_text())
+          state['executable']['candidate_sha256']=hashlib.sha256(Path('index.html').read_bytes()).hexdigest()
+          path.write_text(json.dumps(state,indent=2,ensure_ascii=False)+'\n')
+          PY
+          git diff --check
+          git config user.name 'Römer MPL Pre-release Bot'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html tests/browser_globe_probe.mjs docs/MPL_PRE_RELEASE_STATE.json
+          if git diff --cached --quiet; then
+            echo 'Browser repair already synchronized'
+          else
+            git commit -m 'Repair object-view transition and deterministic globe surface'
+            git push origin HEAD:mpl/pre-release-hardening-2026-08-08
+          fi
