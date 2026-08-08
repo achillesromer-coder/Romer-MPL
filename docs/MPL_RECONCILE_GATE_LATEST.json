@@ -7,5 +7,11 @@
     "validate": "success",
     "tests": "success"
   },
-  "candidateSha256": "d3e25cb3795fdd26364769a883b89f4023ded33296fee5eadf25a823ebfdd43f"
+  "candidateSha256": "5a31c8e50ac9a44545fa291225fe829d82d6bcd5ee50a608bbaced6d4b7a1aef",
+  "workbookContracts": [
+    "Mission_Log",
+    "Asset_Exposures",
+    "BRIDGE_W5_Targets",
+    "BRIDGE_MPL_to_ACHILLES"
+  ]
 }
