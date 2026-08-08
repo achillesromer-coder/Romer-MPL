@@ -27,10 +27,18 @@
   },
   "runtime": {
     "publicReadMode": "CONTROLLED_EMBEDDED_SNAPSHOT",
+    "enrichmentMode": "CONTROLLED_EMBEDDED_ONLY",
+    "automaticExternalEnrichment": false,
+    "optionalExternalEnrichment": ["World Bank GDP", "World Bank population density", "JPL small-body data", "CelesTrak TLE data", "NASA/NOAA texture diagnostics"],
     "appsScriptRole": "OPERATOR_WRITE_TRANSPORT",
+    "publicWorkbookWriteState": "PENDING_OPERATOR_TRANSPORT",
     "semanticVersioning": false,
     "directExternalAIAnalysis": false,
     "modelBufferPct": 110
+  },
+  "workbookContracts": {
+    "manifest": "docs/MPL_WORKBOOK_CONTRACTS.json",
+    "sheets": ["Mission_Log", "Asset_Exposures", "BRIDGE_W5_Targets", "BRIDGE_MPL_to_ACHILLES"]
   },
   "qualityGates": {
     "sourceInvariantGate": "REQUIRED",
@@ -41,6 +49,7 @@
     "navigationWorkflow": "REQUIRED",
     "cameraFloor": "REQUIRED",
     "simulationResultPath": "REQUIRED",
+    "workbookWriteReceipt": "REQUIRED",
     "publicDeploymentVerification": "REQUIRED_BEFORE_CANONICAL_SYNC"
   }
 }
