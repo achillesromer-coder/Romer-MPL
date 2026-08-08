@@ -1,0 +1,58 @@
+name: MPL Pre-release Browser Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-acceptance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start candidate server
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 > /tmp/mpl-http.log 2>&1 &
+          echo $! > /tmp/mpl-http.pid
+          for i in {1..30}; do curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null && exit 0; sleep .25; done
+          cat /tmp/mpl-http.log
+          exit 1
+
+      - name: Run comprehensive browser acceptance probe
+        id: browser
+        continue-on-error: true
+        env:
+          CANDIDATE_URL: http://127.0.0.1:4173/index.html
+        run: node tests/browser_globe_probe.mjs
+
+      - name: Archive exact candidate and browser receipts
+        if: always()
+        run: |
+          mkdir -p artifacts/browser-globe
+          cp index.html artifacts/browser-globe/candidate-index.html
+          sha256sum index.html | tee artifacts/browser-globe/candidate-index.sha256
+
+      - name: Upload browser receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpl-pre-release-browser-${{ github.sha }}
+          path: artifacts/browser-globe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce browser acceptance gate
+        if: steps.browser.outcome != 'success'
+        run: |
+          echo 'MPL pre-release browser acceptance failed.' >&2
+          cat artifacts/browser-globe/summary.json || true
+          exit 1
