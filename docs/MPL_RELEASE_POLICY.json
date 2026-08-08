@@ -1,0 +1,1 @@
+{"stage":"PRE_RELEASE","semanticVersionRequired":false,"promotionRequires":{"sourceGate":true,"calculationGate":true,"browserGate":true,"publicVerification":true,"driveSync":true,"workbookReceipts":true}}
