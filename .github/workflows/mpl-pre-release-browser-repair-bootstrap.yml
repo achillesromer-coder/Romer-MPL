@@ -1,10 +1,9 @@
 name: MPL Pre-release Browser Repair Bootstrap
 
 on:
-  push:
-    branches: [mpl/pre-release-hardening-2026-08-08]
+  pull_request:
+    branches: [main]
     paths: [.github/workflows/mpl-pre-release-browser-repair-bootstrap.yml]
-  workflow_dispatch:
 
 permissions:
   contents: write
