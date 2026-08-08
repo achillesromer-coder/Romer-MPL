@@ -1,6 +1,8 @@
 name: MPL Pre-release Browser Acceptance
 
 on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-09]
   pull_request:
     branches: [main]
   workflow_dispatch:
