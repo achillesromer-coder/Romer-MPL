@@ -1,1 +1,0 @@
-PRE_RELEASE candidate only. Do not synchronize to controlled Drive or append canonical workbook release receipts until source, browser, public deployment and post-merge verification gates pass.
