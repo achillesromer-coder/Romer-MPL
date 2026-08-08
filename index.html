@@ -1274,12 +1274,12 @@ body {
 
         <!-- Mission summary card -->
         <div class="mission-summary show" id="mission-summary">
-          <div class="ms-row"><span class="ms-key">Site</span><span class="ms-val" id="ms-site">—</span></div>
-          <div class="ms-row"><span class="ms-key">Vehicle</span><span class="ms-val" id="ms-veh">—</span></div>
-          <div class="ms-row"><span class="ms-key">Transit</span><span class="ms-val" id="ms-trans">—</span></div>
+          <div class="ms-row"><span class="ms-key">Site</span><span class="ms-val" id="ms-site">NO SITE SELECTED</span></div>
+          <div class="ms-row"><span class="ms-key">Vehicle</span><span class="ms-val" id="ms-veh">NO VEHICLE</span></div>
+          <div class="ms-row"><span class="ms-key">Transit</span><span class="ms-val" id="ms-trans">NO TRANSIT</span></div>
           <div class="ms-row"><span class="ms-key">Failure</span><span class="ms-val gold" id="ms-fail">Random</span></div>
-          <div class="ms-row"><span class="ms-key">Ac (m²)</span><span class="ms-val blue" id="ms-ac">—</span></div>
-          <div class="ms-row"><span class="ms-key">MPL Est.</span><span class="ms-val" id="ms-mpl-est" style="font-size:11px;">—</span></div>
+          <div class="ms-row"><span class="ms-key">Ac (m²)</span><span class="ms-val blue" id="ms-ac">NOT CALCULATED</span></div>
+          <div class="ms-row"><span class="ms-key">MPL Est.</span><span class="ms-val" id="ms-mpl-est" style="font-size:11px;">NOT CALCULATED</span></div>
         </div>
 
         <button class="btn-pri" onclick="goStep(3)">Advanced Parameters →</button>
@@ -1352,7 +1352,7 @@ body {
           <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.1em;margin-bottom:6px;">ADV. PARAMETERS PREVIEW</div>
           <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
             <span style="font-size:11px;color:var(--text3);">Est. MPL</span>
-            <span style="font-family:var(--font-mono);font-size:12px;color:var(--gold);" id="adv-mpl-preview">—</span>
+            <span style="font-family:var(--font-mono);font-size:12px;color:var(--gold);" id="adv-mpl-preview">NOT CALCULATED</span>
           </div>
           <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
             <span style="font-size:11px;color:var(--text3);">Est. Model Buffer</span>
@@ -1467,9 +1467,9 @@ body {
           <!-- IIP LIVE BADGE -->
           <div class="iip-badge" id="iip-badge">
             <div class="iip-badge-title">INSTANTANEOUS IMPACT POINT · SCREENING</div>
-            <div class="iip-badge-row"><span>Lat</span><span id="iip-lat">—</span></div>
-            <div class="iip-badge-row"><span>Lon</span><span id="iip-lon">—</span></div>
-            <div class="iip-badge-row"><span>Prob</span><span id="iip-prob">—</span></div>
+            <div class="iip-badge-row"><span>Lat</span><span id="iip-lat">NOT CALCULATED</span></div>
+            <div class="iip-badge-row"><span>Lon</span><span id="iip-lon">NOT CALCULATED</span></div>
+            <div class="iip-badge-row"><span>Prob</span><span id="iip-prob">NOT CALCULATED</span></div>
             <div id="iip-zone-pill"></div>
           </div>
 
@@ -1522,42 +1522,42 @@ body {
               <div class="mpl-breakdown">
                 <div class="mpl-row">
                   <span class="mpl-row-cat">Cost of Casualties</span>
-                  <span class="mpl-row-method">§6.1 · $4.5M/casualty</span>
-                  <span class="mpl-row-val" id="mr-mpl-cas">—</span>
+                  <span class="mpl-row-method">§6.1 · controlled casualty value</span>
+                  <span class="mpl-row-val" id="mr-mpl-cas">NOT CALCULATED</span>
                 </div>
                 <div class="mpl-row">
                   <span class="mpl-row-cat">Property Damage</span>
-                  <span class="mpl-row-method">§6.2 · 50% of CAS</span>
-                  <span class="mpl-row-val" id="mr-mpl-pd">—</span>
+                  <span class="mpl-row-method">§6.2 · controlled property rule</span>
+                  <span class="mpl-row-val" id="mr-mpl-pd">NOT CALCULATED</span>
                 </div>
                 <div class="mpl-row">
                   <span class="mpl-row-cat">Loss of Use</span>
-                  <span class="mpl-row-method">§6.3 · GDP × CAS</span>
-                  <span class="mpl-row-val" id="mr-mpl-lou">—</span>
+                  <span class="mpl-row-method">§6.3 · controlled loss-of-use rule</span>
+                  <span class="mpl-row-val" id="mr-mpl-lou">NOT CALCULATED</span>
                 </div>
                 <div class="mpl-row">
                   <span class="mpl-row-cat">Environmental</span>
-                  <span class="mpl-row-method">§6.4 · Bounding</span>
-                  <span class="mpl-row-val" id="mr-mpl-env">—</span>
+                  <span class="mpl-row-method">§6.4 · controlled environment rule</span>
+                  <span class="mpl-row-val" id="mr-mpl-env">NOT CALCULATED</span>
                 </div>
               </div>
 
               <div class="mpl-total-row">
                 <span class="mpl-total-label">TOTAL MPL</span>
-                <span class="mpl-total-val" id="mr-mpl-total">—</span>
+                <span class="mpl-total-val" id="mr-mpl-total">NOT CALCULATED</span>
               </div>
               <div class="mpl-component-chart" id="mpl-component-chart" aria-label="MPL component composition">
-                <div class="mpl-component-row" data-component="MPL_CAS"><span class="mpl-component-name">CASUALTY</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
-                <div class="mpl-component-row" data-component="MPL_PD"><span class="mpl-component-name">PROPERTY</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
-                <div class="mpl-component-row" data-component="MPL_LOU"><span class="mpl-component-name">LOSS OF USE</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
-                <div class="mpl-component-row" data-component="MPL_ENV"><span class="mpl-component-name">ENVIRONMENT</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">—</span></div>
+                <div class="mpl-component-row" data-component="MPL_CAS"><span class="mpl-component-name">CASUALTY</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">NOT CALCULATED</span></div>
+                <div class="mpl-component-row" data-component="MPL_PD"><span class="mpl-component-name">PROPERTY</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">NOT CALCULATED</span></div>
+                <div class="mpl-component-row" data-component="MPL_LOU"><span class="mpl-component-name">LOSS OF USE</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">NOT CALCULATED</span></div>
+                <div class="mpl-component-row" data-component="MPL_ENV"><span class="mpl-component-name">ENVIRONMENT</span><span class="mpl-component-track"><span class="mpl-component-fill"></span></span><span class="mpl-component-value">NOT CALCULATED</span></div>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:14px;">
                 <div>
                   <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.12em;">INDICATIVE COVERAGE BUFFER (110%)</div>
                   <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:1px;">MODEL BUFFER — 110% OF SCREENING MPL; NOT A REGULATORY DETERMINATION</div>
                 </div>
-                <span style="font-family:var(--font-mono);font-size:14px;color:var(--blue);font-weight:600;" id="mr-ins-req">—</span>
+                <span style="font-family:var(--font-mono);font-size:14px;color:var(--blue);font-weight:600;" id="mr-ins-req">NOT CALCULATED</span>
               </div>
 
               <div class="mpl-asset-section" id="mpl-assets-wrap" style="display:none;">
@@ -1652,16 +1652,16 @@ body {
         background:rgba(11,15,20,0.92);border:1px solid rgba(79,209,255,0.25);border-radius:6px;
         padding:10px 14px;min-width:200px;backdrop-filter:blur(8px);">
         <div style="font-family:var(--font-sys);font-size:8px;color:var(--blue);letter-spacing:.14em;margin-bottom:8px;">ORBITAL ELEMENTS</div>
-        <div class="orb-row"><span class="orb-key">Apogee</span><span class="orb-val" id="orb-apo">— km</span></div>
-        <div class="orb-row"><span class="orb-key">Perigee</span><span class="orb-val" id="orb-per">— km</span></div>
-        <div class="orb-row"><span class="orb-key">Inclination</span><span class="orb-val" id="orb-inc">—°</span></div>
-        <div class="orb-row"><span class="orb-key">Eccentricity</span><span class="orb-val" id="orb-ecc">—</span></div>
-        <div class="orb-row"><span class="orb-key">Period</span><span class="orb-val" id="orb-period">— min</span></div>
-        <div class="orb-row"><span class="orb-key">RAAN</span><span class="orb-val" id="orb-raan">—°</span></div>
-        <div class="orb-row" id="orb-status-row"><span class="orb-key">Status</span><span class="orb-val" id="orb-status" style="color:var(--green);">NOMINAL</span></div>
+        <div class="orb-row"><span class="orb-key">Apogee</span><span class="orb-val" id="orb-apo">NOT CALCULATED</span></div>
+        <div class="orb-row"><span class="orb-key">Perigee</span><span class="orb-val" id="orb-per">NOT CALCULATED</span></div>
+        <div class="orb-row"><span class="orb-key">Inclination</span><span class="orb-val" id="orb-inc">NOT CALCULATED</span></div>
+        <div class="orb-row"><span class="orb-key">Eccentricity</span><span class="orb-val" id="orb-ecc">NOT CALCULATED</span></div>
+        <div class="orb-row"><span class="orb-key">Period</span><span class="orb-val" id="orb-period">NOT CALCULATED</span></div>
+        <div class="orb-row"><span class="orb-key">RAAN</span><span class="orb-val" id="orb-raan">NOT CALCULATED</span></div>
+        <div class="orb-row" id="orb-status-row"><span class="orb-key">Status</span><span class="orb-val" id="orb-status" style="color:var(--text3);">NOT CALCULATED</span></div>
         <div id="reentry-section" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
           <div style="font-family:var(--font-sys);font-size:8px;color:var(--orange);letter-spacing:.14em;margin-bottom:6px;">RE-ENTRY DATA</div>
-          <div class="orb-row"><span class="orb-key">Entry Angle</span><span class="orb-val" id="re-angle">—°</span></div>
+          <div class="orb-row"><span class="orb-key">Entry Angle</span><span class="orb-val" id="re-angle">NOT CALCULATED</span></div>
           <div class="orb-row"><span class="orb-key">Heat Flux</span><span class="orb-val" id="re-heat">— W/cm²</span></div>
           <div class="orb-row"><span class="orb-key">G-Load</span><span class="orb-val" id="re-gload">— g</span></div>
           <div class="orb-row"><span class="orb-key">Ballistic Coeff.</span><span class="orb-val" id="re-bc">— kg/m²</span></div>
@@ -1680,13 +1680,13 @@ body {
       <!-- Orbital parameter overlay -->
       <div style="position:absolute;top:10px;left:10px;background:rgba(11,15,20,.9);border:1px solid rgba(79,209,255,.2);border-radius:6px;padding:10px 14px;min-width:200px;backdrop-filter:blur(8px);">
         <div class="u-label" style="margin-bottom:8px;">ORBITAL PARAMETERS</div>
-        <div class="u-row"><span class="orb-key">Apogee</span><span class="orb-val" id="ov-apo">— km</span></div>
-        <div class="u-row"><span class="orb-key">Perigee</span><span class="orb-val" id="ov-per">— km</span></div>
-        <div class="u-row"><span class="orb-key">Inclination</span><span class="orb-val" id="ov-inc">—°</span></div>
-        <div class="u-row"><span class="orb-key">Eccentricity</span><span class="orb-val" id="ov-ecc">—</span></div>
-        <div class="u-row"><span class="orb-key">Period</span><span class="orb-val" id="ov-per2">— min</span></div>
-        <div class="u-row"><span class="orb-key">Semi-Major</span><span class="orb-val" id="ov-sma">— km</span></div>
-        <div class="u-row"><span class="orb-key">ΔV Budget</span><span class="orb-val" id="ov-dv">— m/s</span></div>
+        <div class="u-row"><span class="orb-key">Apogee</span><span class="orb-val" id="ov-apo">NOT CALCULATED</span></div>
+        <div class="u-row"><span class="orb-key">Perigee</span><span class="orb-val" id="ov-per">NOT CALCULATED</span></div>
+        <div class="u-row"><span class="orb-key">Inclination</span><span class="orb-val" id="ov-inc">NOT CALCULATED</span></div>
+        <div class="u-row"><span class="orb-key">Eccentricity</span><span class="orb-val" id="ov-ecc">NOT CALCULATED</span></div>
+        <div class="u-row"><span class="orb-key">Period</span><span class="orb-val" id="ov-per2">NOT CALCULATED</span></div>
+        <div class="u-row"><span class="orb-key">Semi-Major</span><span class="orb-val" id="ov-sma">NOT CALCULATED</span></div>
+        <div class="u-row"><span class="orb-key">ΔV Budget</span><span class="orb-val" id="ov-dv">NOT CALCULATED</span></div>
         <div class="u-row"><span class="orb-key">Status</span><span class="orb-val" id="ov-status" style="color:var(--gold);">AWAITING SIM</span></div>
       </div>
       <!-- View controls -->
@@ -1775,7 +1775,7 @@ body {
       <div style="padding:12px 16px;" id="op-list-panel"></div>
       <div style="padding:8px 16px 14px;border-top:1px solid var(--border);">
         <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);letter-spacing:.08em;">
-          Operator prefixes run IDs, PDF headers, and Mission Log entries. Add operators via 08_Operators in MPL Engine Sheet.
+          Operator prefixes run IDs, PDF headers, and Mission Log entries. Add operators via Operators in the MPL Engine workbook.
         </div>
       </div>
     </div>
@@ -1923,8 +1923,8 @@ body {
         <!-- Live MPL preview for custom vehicle -->
         <div class="u-card" id="cv-preview" style="margin-bottom:12px;">
           <div class="u-label" style="margin-bottom:6px;">LIVE MPL PREVIEW</div>
-          <div class="u-flex-sb"><span style="font-size:11px;color:var(--text3);">Est. Aᶜ × ΔV</span><span class="u-mono11" id="cv-dv-preview" style="color:var(--blue);">— m/s</span></div>
-          <div class="u-flex-sb"><span style="font-size:11px;color:var(--text3);">MPL estimate (rural)</span><span class="u-mono11" id="cv-mpl-preview" style="color:var(--gold);">—</span></div>
+          <div class="u-flex-sb"><span style="font-size:11px;color:var(--text3);">Est. Aᶜ × ΔV</span><span class="u-mono11" id="cv-dv-preview" style="color:var(--blue);">NOT CALCULATED</span></div>
+          <div class="u-flex-sb"><span style="font-size:11px;color:var(--text3);">MPL estimate (rural)</span><span class="u-mono11" id="cv-mpl-preview" style="color:var(--gold);">NOT CALCULATED</span></div>
           <div class="u-flex-sb"><span style="font-size:11px;color:var(--text3);">Model buffer (110%)</span><span class="u-mono11" id="cv-ins-preview" style="color:var(--blue);">NOT CALCULATED</span></div>
         </div>
 
@@ -1950,7 +1950,7 @@ body {
     <div class="tele-item">
       <div>
         <div class="tele-label">Phase</div>
-        <div class="tele-val" id="t-phase">—</div>
+        <div class="tele-val" id="t-phase">STANDBY</div>
       </div>
     </div>
     <div class="tele-item">
@@ -1962,25 +1962,25 @@ body {
     <div class="tele-item">
       <div>
         <div class="tele-label">Vehicle</div>
-        <div class="tele-val" id="t-vehicle">—</div>
+        <div class="tele-val" id="t-vehicle">NO VEHICLE</div>
       </div>
     </div>
     <div class="tele-item">
       <div>
         <div class="tele-label">IIP Zone</div>
-        <div class="tele-val b" id="t-iip">—</div>
+        <div class="tele-val b" id="t-iip">NO ACTIVE IIP</div>
       </div>
     </div>
     <div class="tele-item">
       <div>
         <div class="tele-label">MPL Exposure</div>
-        <div class="tele-val d" id="t-mpl-exp">—</div>
+        <div class="tele-val d" id="t-mpl-exp">NOT CALCULATED</div>
       </div>
     </div>
     <div class="tele-item">
       <div>
         <div class="tele-label">Satellites</div>
-        <div class="tele-val d" id="t-sats">—</div>
+        <div class="tele-val d" id="t-sats">INITIALIZING</div>
       </div>
     </div>
     <div class="tele-right">
@@ -2435,7 +2435,7 @@ const S = {
   dataErrors: [], dataLoadedAt: null,
 };
 
-/* ─── EMBEDDED OPERATOR PROFILES (08_Operators — OP-001/002/004) ─── */
+/* ─── EMBEDDED OPERATOR PROFILES (Operators — OP-001/002/004) ─── */
 const OPERATORS_DEFAULT = [
   { id:'OP-001', name:'N. Römer',   short:'NR',  role:'Launch Operator',        email:'achilles.romer@gmail.com', prefix:'RMI', colour:'var(--green)'  },
   { id:'OP-002', name:'ACHILLES',   short:'ABI', role:'Automated Bridge Inst.',  email:'',                          prefix:'ABI', colour:'var(--blue)'   },
@@ -2784,8 +2784,8 @@ const GDP_TABLE = {
   GLB:13500,
 };
 
-/* ─── ACHILLES BRIDGE DATA (from 09_BRIDGE_W5_Targets) ─── */
-/* ─── ACHILLES BRIDGE DATA — 09_BRIDGE_W5_Targets (6 mission targets) ─── */
+/* ─── ACHILLES BRIDGE DATA (from BRIDGE_W5_Targets) ─── */
+/* ─── ACHILLES BRIDGE DATA — BRIDGE_W5_Targets (6 mission targets) ─── */
 const ACHILLES_BRIDGE = [
   { id:'BW5-001', objId:'ZNL-001', name:'1999 JU3 Analogue',   sma:1.19,  ecc:0.19,  inc:5.9, diam:0.9,  cls:'Cg', dv:4.8, tof:210, c3:12.4, site:'LS005', launchWindow:'2027-Q2', status:'AWAITING_MPL',  esa_pdi:0.00, mass_Tg:0.45   },
   { id:'BW5-002', objId:'ZNL-004', name:'2001 SG286 Analogue', sma:1.03,  ecc:0.07,  inc:1.4, diam:0.4,  cls:'S',  dv:3.9, tof:180, c3:8.1,  site:'LS001', launchWindow:'2027-Q3', status:'AWAITING_MPL',  esa_pdi:0.00, mass_Tg:0.09   },
@@ -3020,11 +3020,11 @@ function updateMissionSummary() {
   const el = document.getElementById('mission-summary');
   if (!el) return;
   el.classList.add('show');
-  document.getElementById('ms-site').textContent  = S.site?.short  || '—';
-  document.getElementById('ms-veh').textContent   = S.vehicle?.name || '—';
-  document.getElementById('ms-trans').textContent = S.transit?.name || '—';
+  document.getElementById('ms-site').textContent  = S.site?.short||'NO SITE SELECTED';
+  document.getElementById('ms-veh').textContent   = S.vehicle?.name||'NO VEHICLE';
+  document.getElementById('ms-trans').textContent = S.transit?.name||'NO TRANSIT';
   document.getElementById('ms-fail').textContent  = S.failMode === 'random' ? 'Random T+' : `T+${document.getElementById('fail-t')?.value||154}s`;
-  document.getElementById('ms-ac').textContent    = S.vehicle ? `${S.vehicle.ac.toLocaleString()} m²` : '—';
+  document.getElementById('ms-ac').textContent    = S.vehicle?`${S.vehicle.ac.toLocaleString()} m²`:'NOT CALCULATED';
   // Live worst-case pre-run MPL estimate
   if(S.vehicle && S.site) {
     try {
@@ -3654,7 +3654,7 @@ function showMPLResults(r,sim) {
       const corridorPip = a.inCorridor
         ? `<span style="color:var(--red);font-size:8px;margin-right:2px;">▶</span>`
         : `<span style="color:var(--text4);font-size:8px;margin-right:2px;">·</span>`;
-      const azStr = a.azDelta !== undefined ? `${a.azDelta}°` : '—';
+      const azStr = a.azDelta !== undefined ? `${a.azDelta}°` : 'NOT PROVIDED';
       return `
       <div class="mpl-asset-row" style="border-left:2px solid ${riskColor};padding-left:7px;">
         <span class="mpl-asset-ico">${ico}</span>
@@ -3706,15 +3706,15 @@ function abortMission(){if(!S.simRunning)return;S.simFailT=simData.t+0.1;toast('
 function logMissionRun(){
   if(!S.lastRun){toast('No run data to log');return;}
   const r=S.lastRun.result;
-  // Schema matches 10_Mission_Log tab exactly
+  // Schema matches canonical Mission_Log tab
   const data={
     RunID:S.lastRun.runId, Timestamp:S.lastRun.timestamp,
     OperatorID:S.activeOperator?.id||'OP-001', OperatorName:S.activeOperator?.name||'N. Römer',
-    SiteID:S.site?.id||'—', SiteName:S.site?.name||'—',
+    SiteID:S.site?.id||'NOT PROVIDED', SiteName:S.site?.name||'NOT PROVIDED',
     SiteLat:S.site?.lat||0, SiteLon:S.site?.lon||0,
-    VehicleID:S.vehicle?.id||'—', VehicleName:S.vehicle?.name||'—',
-    TransitType:S.transit?.id||'—',
-    FailureMode:S.failModeIds.join(',')||'—',
+    VehicleID:S.vehicle?.id||'NOT PROVIDED', VehicleName:S.vehicle?.name||'NOT PROVIDED',
+    TransitType:S.transit?.id||'NOT PROVIDED',
+    FailureMode:S.failModeIds.join(',')||'NOT PROVIDED',
     FailureTiming:S.failMode,
     FailureTime_Tplus_s:S.lastRun.failureTime?.toFixed(1)||'0',
     FlightPhase:r.phase,
@@ -3743,7 +3743,7 @@ function logMissionRun(){
     RunStatus:'COMPLETE',
     LoggedToSheets:true, PDFExported:S.lastRun.pdfExported||false,
     AchillesBridgeRef:S.achillesRef||'',
-    Notes:`PRE-RELEASE | ${S.site?.short||'—'} | ${S.vehicle?.name||'—'} | ${r.compliance}`,
+    Notes:`PRE-RELEASE | ${S.site?.short||'NOT PROVIDED'} | ${S.vehicle?.name||'NOT PROVIDED'} | ${r.compliance}`,
     OperatorID:   S.activeOperator?.id   || 'OP-001',
     OperatorName: S.activeOperator?.name || 'N. Römer',
   };
@@ -3751,13 +3751,12 @@ function logMissionRun(){
   writeAchillesBridge(r);
 }
 
-// Write MPL result back to ACHILLES W5 bridge (09_BRIDGE_W5_Targets tab)
+// Write MPL result back to ACHILLES W5 bridge (BRIDGE_W5_Targets tab)
 async function writeAchillesBridge(r) {
   if (!S.achillesRef || !APPS_SCRIPT) return;
   const bridgeData = {
     MPL_RunID: S.lastRun?.runId,
-    MPL_Compliance: r.compliance.includes('PASS') ? 'PASS' :
-                    r.compliance.includes('FAIL') ? 'FAIL' : 'REVIEW',
+    MPL_Compliance: r.compliance.includes('LOWER')?'LOWER_SCREENING_BAND':r.compliance.includes('UPPER')?'UPPER_REVIEW_BAND':'REVIEW',
     MPL_Total_AUD: Math.round(r.MPL_TOTAL),
     MPL_Model_Buffer_110pct: Math.round(r.MODEL_BUFFER || r.MPL_TOTAL * 1.1),
     MPL_CAS_AUD: Math.round(r.MPL_CAS),
@@ -3773,7 +3772,7 @@ async function writeAchillesBridge(r) {
   try {
     await fetch(APPS_SCRIPT, {
       method:'POST',
-      body: JSON.stringify({ action:'update_bridge', tab:'09_BRIDGE_W5_Targets', bridgeId: S.achillesRef, data: bridgeData })
+      body: JSON.stringify({ action:'update_bridge', tab:'BRIDGE_W5_Targets', bridgeId: S.achillesRef, data: bridgeData })
     });
     // Update bridge panel badge for all 6 targets
     const idxMap = {'BW5-001':'ach-001','BW5-002':'ach-002','BW5-003':'ach-003','BW5-004':'ach-004','BW5-005':'ach-005','BW5-006':'ach-006'};
@@ -3781,8 +3780,8 @@ async function writeAchillesBridge(r) {
     if(achEl) {
       const badge = achEl.querySelector('.at-badge');
       if(badge) {
-        badge.textContent = r.compliance.includes('PASS') ? '✓ MPL PASS' : r.compliance.includes('FAIL') ? '✗ FAIL' : '⚠ REVIEW';
-        badge.style.color = r.compliance.includes('PASS') ? 'var(--green)' : r.compliance.includes('FAIL') ? 'var(--red)' : 'var(--gold)';
+        badge.textContent=r.compliance.includes('LOWER')?'MPL LOWER BAND':r.compliance.includes('UPPER')?'MPL UPPER REVIEW':'MPL REVIEW';
+        badge.style.color=r.compliance.includes('LOWER')?'var(--green)':r.compliance.includes('UPPER')?'var(--orange)':'var(--gold)';
       }
     }
     toast('✓ ACHILLES W5 bridge updated with MPL result');
@@ -3792,43 +3791,16 @@ async function writeAchillesBridge(r) {
 }
 
 // ACHILLES W6 — Asset Exposure writeback (separate Achilles sheet)
-async function writeAchillesW6(r) {
-  const W6_URL = 'https://romer.industries/w6/data';  // ACHILLES W6 MCP endpoint
-  if (!W6_URL || !r.allAssets) return;
-  try {
-    const payload = {
-      runId: S.lastRun?.runId,
-      site: S.site?.id,
-      mplTotal: Math.round(r.MPL_TOTAL),
-      assetExposures: (r.allAssets||r.nearbyAssets||[]).slice(0, 15).map(a => ({
-        id: a.id, name: a.name, type: a.type,
-        dist_km: a.dist_km,
-        bear_deg: a.bear_deg,
-        azDelta: a.azDelta,
-        inCorridor: a.inCorridor,
-        proxWeight: parseFloat((a.proxWeight||0).toFixed(4)),
-        distWeight: parseFloat((a.distWeight||0).toFixed(4)),
-        corridorWeight: parseFloat((a.corridorWeight||0).toFixed(4)),
-        propExp: Math.round(a.propExp||0),
-        louExp:  Math.round(a.louExp||0),
-        envExp:  Math.round(a.envExp||0),
-      })),
-      timestamp: new Date().toISOString(),
-    };
-    await fetch(W6_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'asset_exposure', data: payload }),
-      signal: AbortSignal.timeout(5000),
-    });
-    toast('✓ ACHILLES W6 asset exposure written');
-  } catch(e) { /* W6 offline — non-critical */ }
+function writeAchillesW6(r){
+  const receipt={state:'AUTH_REQUIRED',transport:'OPERATOR_SIDE',endpoint:'https://romer.industries/w6/data',runId:S.lastRun?.runId,site:S.site?.id,mplTotal:Math.round(r.MPL_TOTAL),assetExposureCount:(r.allAssets||r.nearbyAssets||[]).length,timestamp:new Date().toISOString()};
+  S.lastW6Receipt=receipt;
+  return receipt;
 }
 
 /* ═══════════════════════════════════════════════════════
    MULTI-OPERATOR WEBHOOK — Mission Complete Notification
    Dispatches to a user-configured webhook URL on each run.
-   Configure via CF-022 in 00_MPL_Config sheet (URL value).
+   Configure via CF-022 in MPL_Config (URL value).
    Payload: standard run summary JSON.
 ═══════════════════════════════════════════════════════ */
 async function dispatchWebhook(runObj) {
@@ -3974,14 +3946,14 @@ function exportPDF() {
 
   <h2>Mission Parameters</h2>
   <div class="grid">
-    <div class="cell"><div class="cell-k">Launch Site</div><div class="cell-v">${S.site?.name||'—'}</div></div>
-    <div class="cell"><div class="cell-k">Vehicle</div><div class="cell-v">${S.vehicle?.name||'—'}</div></div>
-    <div class="cell"><div class="cell-k">Transit Type</div><div class="cell-v">${S.transit?.name||'—'}</div></div>
+    <div class="cell"><div class="cell-k">Launch Site</div><div class="cell-v">${S.site?.name||'NOT PROVIDED'}</div></div>
+    <div class="cell"><div class="cell-k">Vehicle</div><div class="cell-v">${S.vehicle?.name||'NOT PROVIDED'}</div></div>
+    <div class="cell"><div class="cell-k">Transit Type</div><div class="cell-v">${S.transit?.name||'NOT PROVIDED'}</div></div>
     <div class="cell"><div class="cell-k">Failure Mode</div><div class="cell-v">${S.failModeIds.map(id=>FMODES.find(f=>f.id===id)?.name||id).join(', ')||'Random'}</div></div>
     <div class="cell"><div class="cell-k">Failure Time</div><div class="cell-v">T+ ${Number(S.lastRun.failureTime||0).toFixed(1)} s</div></div>
     <div class="cell"><div class="cell-k">Flight Phase</div><div class="cell-v">${r.phase}</div></div>
     <div class="cell"><div class="cell-k">IIP Zone</div><div class="cell-v">${r.zoneData.name}</div></div>
-    <div class="cell"><div class="cell-k">Coordinates</div><div class="cell-v">${S.site?.lat?.toFixed(4)||'—'}°, ${S.site?.lon?.toFixed(4)||'—'}°</div></div>
+    <div class="cell"><div class="cell-k">Coordinates</div><div class="cell-v">${S.site?.lat?.toFixed(4)||'NOT PROVIDED'}°, ${S.site?.lon?.toFixed(4)||'NOT PROVIDED'}°</div></div>
   </div>
 
   <h2>Casualty Assessment (ASA §6.1)</h2>
@@ -4010,11 +3982,11 @@ function exportPDF() {
     <tr><th>Asset</th><th>Type</th><th>Distance</th><th>Bearing</th><th>Az Δ</th><th>Corridor</th><th>Prox. W</th><th style="text-align:right">Property Exposure</th></tr>
     ${(r.allAssets||r.nearbyAssets||[]).slice(0,10).map(a=>`
     <tr>
-      <td>${escapeHTML(a.name)}</td><td>${escapeHTML(a.type||'—')}</td><td>${a.dist_km} km</td>
-      <td>${a.bear_deg!=null?a.bear_deg+'°':'—'}</td>
-      <td>${a.azDelta!=null?a.azDelta+'°':'—'}</td>
+      <td>${escapeHTML(a.name)}</td><td>${escapeHTML(a.type||'NOT PROVIDED')}</td><td>${a.dist_km} km</td>
+      <td>${a.bear_deg!=null?a.bear_deg+'°':'NOT PROVIDED'}</td>
+      <td>${a.azDelta!=null?a.azDelta+'°':'NOT PROVIDED'}</td>
       <td>${a.inCorridor?'▶':'·'}</td>
-      <td style="font-family:'JetBrains Mono',monospace">${a.proxWeight!=null?a.proxWeight.toFixed(3):'—'}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${a.proxWeight!=null?a.proxWeight.toFixed(3):'NOT PROVIDED'}</td>
       <td style="text-align:right;font-family:'JetBrains Mono',monospace">${fmtUSD(a.propExp||0)}</td>
     </tr>`).join('')}
     ${(r.corridorHVAs||[]).filter(a=>a.inCorridor).length>0?`
@@ -5329,13 +5301,13 @@ function updateSatellitePositions() {
 function showSatPopup(userData, e) {
   const r = userData.lastResult || {};
   const pop = document.getElementById('sat-popup'); pop.classList.add('on');
-  document.getElementById('sp-name').textContent = userData.name || '—';
-  document.getElementById('sp-alt').textContent  = r.alt  ? `${Math.round(r.alt * 6371)} km`   : '—';
-  document.getElementById('sp-vel').textContent  = r.vel  ? `${r.vel.toFixed(2)} km/s`           : '—';
+  document.getElementById('sp-name').textContent = userData.name ||'NOT PROVIDED';
+  document.getElementById('sp-alt').textContent  = r.alt  ? `${Math.round(r.alt * 6371)} km`   : 'NOT PROVIDED';
+  document.getElementById('sp-vel').textContent  = r.vel  ? `${r.vel.toFixed(2)} km/s`           : 'NOT PROVIDED';
   document.getElementById('sp-inc').textContent  = userData.rec?.l2
-    ? parseFloat(userData.rec.l2.slice(8,16)).toFixed(2) + '°' : '—';
+    ? parseFloat(userData.rec.l2.slice(8,16)).toFixed(2) + '°' : 'NOT PROVIDED';
   document.getElementById('sp-per').textContent  = userData.rec?.l2
-    ? (86400 / parseFloat(userData.rec.l2.slice(52,63))).toFixed(1) + ' min' : '—';
+    ? (86400 / parseFloat(userData.rec.l2.slice(52,63))).toFixed(1) + ' min' : 'NOT PROVIDED';
   pop.style.left = (e.clientX + 14) + 'px';
   pop.style.top  = Math.max(60, e.clientY - 60) + 'px';
   S.hovSat = userData;
@@ -5989,12 +5961,12 @@ function runSweep() {
     ZONES_LIST.forEach(zone => {
       const fmIds = fmSel==='ALL' ? FMODES.map(f=>f.id) : [fmSel];
       const r = calculateMPL({vehicle:S.vehicle, site:S.site, phase:'ascent', zone, failModes:fmIds, isUprange:true});
-      rows.push({ key:zone, mpl:Math.round(r.MPL_TOTAL), ins:Math.round(r.MODEL_BUFFER), phase:'ascent', zone, cas:r.CAS_total });
+      rows.push({ key:zone, mpl:Math.round(r.MPL_TOTAL), buffer:Math.round(r.MODEL_BUFFER), phase:'ascent', zone, cas:r.CAS_total });
     });
   } else if(axis === 'fmode') {
     FMODES.forEach(fm => {
       const r = calculateMPL({vehicle:S.vehicle, site:S.site, phase:'ascent', zone:'RURAL', failModes:[fm.id], isUprange:true});
-      rows.push({ key:fm.name, mpl:Math.round(r.MPL_TOTAL), ins:Math.round(r.MODEL_BUFFER), phase:'ascent', zone:'RURAL', cas:r.CAS_total });
+      rows.push({ key:fm.name, mpl:Math.round(r.MPL_TOTAL), buffer:Math.round(r.MODEL_BUFFER), phase:'ascent', zone:'RURAL', cas:r.CAS_total });
     });
   }
 
@@ -6046,7 +6018,7 @@ function exportSweepCSV() {
   if(!sweepResults.length) return;
   const headers = ['Scenario','Casualties','MPL_Total_AUD','Model_Buffer_AUD','Phase','Zone'];
   const csv = [headers.join(','), ...sweepResults.map(r =>
-    [r.key, r.cas, r.mpl, r.ins, r.phase, r.zone].join(',')
+    [r.key, r.cas, r.mpl, r.buffer, r.phase, r.zone].join(',')
   )].join('\n');
   const blob = new Blob([csv], {type:'text/csv'});
   const a = document.createElement('a');
@@ -6062,7 +6034,7 @@ function exportSweepPDF() {
   const avg=Math.round(sweepResults.reduce((s,r)=>s+r.mpl,0)/sweepResults.length);
   const now=new Date().toISOString().slice(0,19).replace('T',' ')+' UTC';
   const axisEl=document.getElementById('sw-axis');
-  const axisLabel=axisEl?axisEl.options[axisEl.selectedIndex]?.text:'—';
+  const axisLabel=axisEl?axisEl.options[axisEl.selectedIndex]?.text:'NOT PROVIDED';
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Römer Sweep Report</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;font-size:11pt;color:#1a1a1a;padding:16mm 20mm}
 .hd{display:flex;justify-content:space-between;border-bottom:2px solid #1a1a1a;padding-bottom:6mm;margin-bottom:6mm}
@@ -6082,7 +6054,7 @@ td{padding:2.5mm 4mm;border-bottom:1px solid #e8e8e8}
 @media print{body{padding:10mm 14mm}}</style></head><body>
 <div class="hd">
   <div><div class="logo">RÖMER INDUSTRIES</div><div style="font-size:8pt;color:#666;margin-top:2px">MPL PLATFORM PRE-RELEASE — PARAMETER SWEEP REPORT</div></div>
-  <div class="ref"><div>${now}</div><div>Site: ${S.site?.name||'—'} · Vehicle: ${S.vehicle?.name||'—'}</div><div>Sweep Axis: ${axisLabel}</div></div>
+  <div class="ref"><div>${now}</div><div>Site: ${S.site?.name||'NOT PROVIDED'} · Vehicle: ${S.vehicle?.name||'NOT PROVIDED'}</div><div>Sweep Axis: ${axisLabel}</div></div>
 </div>
 <h1>Parameter Sweep — ${sweepResults.length} Scenarios</h1>
 <div class="summary">
@@ -6095,7 +6067,7 @@ td{padding:2.5mm 4mm;border-bottom:1px solid #e8e8e8}
 <tbody>${sweepResults.map(r=>{const p=r.mpl/maxMPL;const col=p>0.7?'#c84040':p>0.35?'#c87020':'#c8a020';return`<tr>
 <td>${r.key}</td><td style="font-family:monospace;color:${r.cas>0?'#c8410a':'#1a7a40'}">${r.cas}</td>
 <td class="mpl">$${r.mpl.toLocaleString()}</td><td class="mpl" style="color:#2a62a0">$${r.buffer.toLocaleString()}</td>
-<td>${r.zone||'—'}</td>
+<td>${r.zone||'NOT PROVIDED'}</td>
 <td><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(p*100)}%;background:${col}"></div></div></td></tr>`;}).join('')}
 </tbody></table>
 <div class="footer"><div>Römer Industries Pty Ltd · achilles.romer@gmail.com</div><div>Römer screening sweep · ASA MPL methodology reference · independent validation required</div></div>
@@ -6139,7 +6111,7 @@ function renderRunsPanel() {
         <span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">${r.ts}</span>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:5px;">
-        <span style="font-size:11px;color:var(--text2);">${r.site||'—'} · ${r.vehicle||'—'}</span>
+        <span style="font-size:11px;color:var(--text2);">${r.site||'NOT PROVIDED'} · ${r.vehicle||'NOT PROVIDED'}</span>
         <span style="font-family:var(--font-mono);font-size:10px;color:${col};">${comp.split('—')[0].trim()}</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -6246,14 +6218,14 @@ function runBatch() {
     const fmIds=item.failMode==='ALL'?FMODES.map(f=>f.id):[item.failMode];
     const r=calculateMPL({vehicle:item.vehicle,site:item.site,phase:'ascent',zone:item.zone,failModes:fmIds,isUprange:true});
     batchResults.push({label:item.label,site:item.site.short,vehicle:item.vehicle.name,zone:item.zone,failMode:item.failMode,
-      mpl:Math.round(r.MPL_TOTAL),ins:Math.round(r.MODEL_BUFFER),cas:r.CAS_total,pd:Math.round(r.MPL_PD),
+      mpl:Math.round(r.MPL_TOTAL),buffer:Math.round(r.MODEL_BUFFER),cas:r.CAS_total,pd:Math.round(r.MPL_PD),
       lou:Math.round(r.MPL_LOU),env:Math.round(r.MPL_ENV),compliance:r.compliance,
-      nearestAsset:r.allAssets?.[0]?.name||'—',proxWeight:r.allAssets?.[0]?.proxWeight?.toFixed(3)||'—'});
+      nearestAsset:r.allAssets?.[0]?.name||'NOT PROVIDED',proxWeight:r.allAssets?.[0]?.proxWeight?.toFixed(3)||'NOT PROVIDED'});
   });
   batchResults.sort((a,b)=>b.mpl-a.mpl);
   const maxMPL=batchResults[0]?.mpl||1;
   const avgMPL=Math.round(batchResults.reduce((s,r)=>s+r.mpl,0)/batchResults.length);
-  const avgIns=Math.round(batchResults.reduce((s,r)=>s+r.ins,0)/batchResults.length);
+  const avgBuffer=Math.round(batchResults.reduce((s,r)=>s+r.buffer,0)/batchResults.length);
   const maxCas=Math.max(...batchResults.map(r=>r.cas));
 
   panel.innerHTML=`
@@ -6266,13 +6238,13 @@ function runBatch() {
       <th style="padding:5px 7px;text-align:left;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">SCENARIO</th>
       <th style="padding:5px 7px;text-align:center;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">CAS</th>
       <th style="padding:5px 7px;text-align:right;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">MPL TOTAL</th>
-      <th style="padding:5px 7px;text-align:right;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">INS. REQ.</th>
+      <th style="padding:5px 7px;text-align:right;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">MODEL BUFFER</th>
       <th style="padding:5px 7px;text-align:left;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">STATUS</th>
       <th style="padding:5px 7px;text-align:left;font-family:var(--font-mono);font-size:8px;color:var(--text4);font-weight:400;">BAR</th>
     </tr></thead>
     <tbody>${batchResults.map(r=>{
       const pct=r.mpl/maxMPL, col=pct>0.7?'var(--red)':pct>0.35?'var(--orange)':'var(--gold)';
-      const cCol=r.compliance.includes('PASS')?'var(--green)':r.compliance.includes('FAIL')?'var(--red)':'var(--gold)';
+      const cCol=r.compliance.includes('LOWER')?'var(--green)':r.compliance.includes('UPPER')?'var(--orange)':'var(--gold)';
       return `<tr style="border-bottom:1px solid var(--border);">
         <td style="padding:5px 7px;"><div style="font-size:11px;color:var(--text2);">${r.label}</div>
           <div style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">HVA: ${r.nearestAsset} (W=${r.proxWeight})</div></td>
@@ -6286,7 +6258,7 @@ function runBatch() {
   </table>
   <div style="margin-top:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);display:flex;gap:16px;flex-wrap:wrap;">
     <div><span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">AVG MPL  </span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);">${fmtUSD(avgMPL)}</span></div>
-    <div><span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">AVG BUF  </span><span style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">${fmtUSD(avgIns)}</span></div>
+    <div><span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">AVG BUF  </span><span style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">${fmtUSD(avgBuffer)}</span></div>
     <div><span style="font-family:var(--font-mono);font-size:8px;color:var(--text4);">MAX CAS  </span><span style="font-family:var(--font-mono);font-size:11px;color:var(--red);">${maxCas}</span></div>
   </div>`;
 
@@ -6300,7 +6272,7 @@ function runBatch() {
 function exportBatchCSV() {
   if(!batchResults.length) return;
   const hdr=['Scenario','Site','Vehicle','Zone','FailMode','MPL_AUD','BUFFER_AUD','CAS','PD','LOU','ENV','Compliance','TopHVA','ProxW'];
-  const csv=[hdr.join(','),...batchResults.map(r=>[r.label,r.site,r.vehicle,r.zone,r.failMode,r.mpl,r.ins,r.cas,r.pd,r.lou,r.env,`"${r.compliance}"`,r.nearestAsset,r.proxWeight].join(','))].join('\n');
+  const csv=[hdr.join(','),...batchResults.map(r=>[r.label,r.site,r.vehicle,r.zone,r.failMode,r.mpl,r.buffer,r.cas,r.pd,r.lou,r.env,`"${r.compliance}"`,r.nearestAsset,r.proxWeight].join(','))].join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download=`Romer_Batch_${getRunPrefix()}_${Date.now()}.csv`; a.click();
   toast('Batch CSV downloaded');
@@ -6316,7 +6288,7 @@ async function logBatchToSheets() {
       Timestamp:new Date().toISOString(),
       Site:r.site, Vehicle:r.vehicle,
       Zone:r.zone, FailureMode:r.failMode,
-      MPL_Total:r.mpl, Model_Buffer:r.ins,
+      MPL_Total:r.mpl, Model_Buffer:r.buffer,
       CAS_Total:r.cas, Compliance:r.compliance,
       OperatorID:S.activeOperator?.id||'OP-001',
       OperatorName:S.activeOperator?.name||'N. Römer',
@@ -6324,7 +6296,7 @@ async function logBatchToSheets() {
     }));
     await fetch(APPS_SCRIPT, {
       method:'POST',
-      body: JSON.stringify({ action:'batch_append', tab:'10_Mission_Log', rows, operatorId: S.activeOperator?.id||'OP-001' })
+      body: JSON.stringify({ action:'batch_append', tab:'Mission_Log', rows, operatorId: S.activeOperator?.id||'OP-001' })
     });
     toast(`✓ ${batchResults.length} batch runs logged (batch_append)`);
   } catch(e){toast(`Batch log failed — ${e.message}`);}
@@ -6339,7 +6311,7 @@ function closeAI() { document.getElementById('ai-modal').style.display='none'; }
 function runAIAnalysis(){if(!S.lastRun){toast('Run a simulation first');return;}const r=S.lastRun.result,out=document.getElementById('ai-output'),gaps=[];if(!r.evidenceBoundary?.impactIsopleth10e7)gaps.push('Flight Safety Code 10⁻⁷ probability-of-impact isopleth not supplied.');if(CONSTANT_RECEIPTS['MC-001']?.reviewStatus!=='VERIFIED')gaps.push('Controlled monetary constant provenance remains subject to independent source review.');out.innerHTML=`<div class="u-section-hd">MODEL EVIDENCE REVIEW</div>${gaps.map(g=>`<div class="u-card" style="margin-bottom:6px"><span class="u-tag u-tag-gld">REVIEW</span> <span style="font-size:11px">${escapeHTML(g)}</span></div>`).join('')}<div class="u-mono9" style="margin-top:10px;color:var(--text4)">Model-evidence check only; not legal advice, regulator acceptance, permit likelihood, or an application-ready MPL determination.</div>`;}
 
 /* ════════════════════════════════════════════════════════
-   BC-009: MISSION URL SHARE MISSION URL SHARE
+   BC-009: MISSION URL SHARE
 ════════════════════════════════════════════════════════ */
 function shareMission() {
   if(!S.lastRun) { toast('No run data to share'); return; }
@@ -6862,7 +6834,7 @@ function renderRunsPanel() {
         </div>
       </div>
       <div class="u-flex-sb" style="margin-bottom:3px;">
-        <span style="font-size:11px;color:var(--text2);">${r.site||'—'} · ${r.vehicle||'—'}</span>
+        <span style="font-size:11px;color:var(--text2);">${r.site||'NOT PROVIDED'} · ${r.vehicle||'NOT PROVIDED'}</span>
         <span class="u-mono9" style="color:${col};">${comp.split('—')[0].trim()}</span>
       </div>
       <div class="u-flex-sb">
@@ -7097,7 +7069,34 @@ function bootApp(){
   setTimeout(fetchLiveGDP,2500); setTimeout(fetchLivePopDensity,4200); setTimeout(fetchJPLHorizons,6200);
   readShareHash();
 }
-async function runSplash(){ return bootApp(); }
+const SPLASH_STEPS=[{id:'li0',t:0},{id:'li1',t:500},{id:'li2',t:1050},{id:'li3',t:1650},{id:'li4',t:2200},{id:'li5',t:2750}];
+async function runSplash(){
+  let revealed=false;
+  const reveal=()=>{
+    if(revealed)return;revealed=true;
+    document.getElementById('splash')?.classList.add('out');
+    document.getElementById('app')?.classList.add('live');
+    if(window.matchMedia?.('(max-width:760px)').matches&&!S.panelCollapsed)setTimeout(()=>togglePanel(true),180);
+    setTimeout(()=>{const splash=document.getElementById('splash');if(splash)splash.style.display='none';},1100);
+    startClock();setupKeyboard();
+  };
+  const emergency=setTimeout(()=>{console.warn('[MPL boot] emergency reveal');try{bootApp();}catch{}reveal();},12000);
+  try{
+    for(let i=0;i<SPLASH_STEPS.length;i++){
+      await wait(i===0?120:SPLASH_STEPS[i].t-SPLASH_STEPS[i-1].t);
+      if(i>0){const prev=document.getElementById(SPLASH_STEPS[i-1].id);prev?.classList.remove('active');prev?.classList.add('done');}
+      document.getElementById(SPLASH_STEPS[i].id)?.classList.add('active');
+      const progress=document.getElementById('progress');if(progress)progress.style.width=((i+1)/SPLASH_STEPS.length*100)+'%';
+    }
+    loadSettings();
+    await loadSheets();
+    document.getElementById(SPLASH_STEPS.at(-1).id)?.classList.add('done');
+    bootApp();
+    await wait(180);reveal();
+    setTimeout(()=>{document.getElementById('kbd-hints')?.classList.add('show');setTimeout(()=>document.getElementById('kbd-hints')?.classList.remove('show'),4000);},1200);
+  }catch(error){console.error('[MPL boot] degraded mode',error);try{bootApp();}catch{}reveal();}
+  finally{clearTimeout(emergency);}
+}
 window.addEventListener('load',runSplash);
 </script>
 </body>
