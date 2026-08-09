@@ -1,0 +1,48 @@
+name: Apply MPL Browser Acceptance Repairs
+
+on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-09]
+    paths:
+      - tools/repair_prerelease_browser_acceptance.py
+      - .github/workflows/mpl-apply-browser-acceptance-repairs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-09
+          fetch-depth: 0
+      - name: Apply deterministic runtime repair
+        run: |
+          python tools/repair_prerelease_browser_acceptance.py
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          source=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',source,re.S)
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          assert source.count('function hideSatPopup()') == 1
+          assert source.count('function resizeLaunchScene(') == 1
+          assert 'MODEL_META.baseBlob' not in source
+          assert 'v0.' not in source
+          PY
+          node --check /tmp/mpl-inline.js
+          git diff --check
+      - name: Commit repaired runtime
+        run: |
+          git config user.name 'Römer MPL Pre-release Gate'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'Runtime repairs already applied.'
+          else
+            git commit -m 'Repair object rendering and popup lifecycle'
+            git push origin HEAD:mpl/pre-release-hardening-2026-08-09
+          fi
