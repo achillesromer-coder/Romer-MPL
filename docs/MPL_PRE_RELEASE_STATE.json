@@ -6,6 +6,7 @@
   "executable": {
     "path": "index.html",
     "candidate_sha256": "494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c",
+    "size_bytes": 430297,
     "public_surface": "https://achillesromer-coder.github.io/Romer-MPL/",
     "embed_surface": "https://romer.industries/mpl-engine"
   },
@@ -64,13 +65,14 @@
     "browser_workflow": ".github/workflows/mpl-browser-regression.yml",
     "source_model_gate": "PASS",
     "browser_gate": "PASS",
-    "browser_run_id": 31337567525,
-    "tested_merge_ref": "44b55bac14aa20621baf2697dfd105b03b169050",
+    "source_model_run_id": 31337807344,
+    "browser_run_id": 31337807323,
     "tested_source_sha256": "494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c",
     "desktop_failures": 0,
     "mobile_failures": 0,
     "page_errors": 0,
-    "console_errors": 0
+    "console_errors": 0,
+    "request_failures": 0
   },
   "external_dependencies": [
     {
