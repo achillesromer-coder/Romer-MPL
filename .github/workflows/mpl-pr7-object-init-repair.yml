@@ -1,0 +1,51 @@
+name: MPL PR7 Object Initializer Repair
+
+on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-08]
+    paths: [.github/workflows/mpl-pr7-object-init-repair.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-08
+          fetch-depth: 0
+      - name: Correct launch-scene initializer reference
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ('index.html','tools/fix_pr7_browser_acceptance.py'):
+              p=Path(name)
+              s=p.read_text(encoding='utf-8')
+              s2=s.replace('initLaunchView()', 'initLaunchScene()')
+              if s2==s:
+                  print(f'{name}: initializer already correct or reference absent')
+              else:
+                  p.write_text(s2,encoding='utf-8')
+                  print(f'{name}: corrected initLaunchView -> initLaunchScene')
+          PY
+      - name: JavaScript syntax gate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',src,re.S)
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/mpl-inline.js
+      - name: Commit corrected candidate and remove temporary workflow
+        run: |
+          git rm .github/workflows/mpl-pr7-object-init-repair.yml
+          git diff --check
+          git config user.name 'Römer MPL Validation Bot'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html tools/fix_pr7_browser_acceptance.py
+          git commit -m 'Correct Object-view launch scene initializer'
+          git push origin HEAD:mpl/pre-release-hardening-2026-08-08
