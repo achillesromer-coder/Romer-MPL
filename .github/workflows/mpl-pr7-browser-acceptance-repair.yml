@@ -1,0 +1,46 @@
+name: MPL PR7 Browser Acceptance Repair
+
+on:
+  push:
+    branches: [mpl/pre-release-hardening-2026-08-08]
+    paths:
+      - tools/fix_pr7_browser_acceptance.py
+      - .github/workflows/mpl-pr7-browser-acceptance-repair.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-08
+          fetch-depth: 0
+      - name: Apply idempotent runtime repairs
+        run: python tools/fix_pr7_browser_acceptance.py index.html
+      - name: Validate inline JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',src,re.S)
+          if not scripts: raise SystemExit('inline script missing')
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/mpl-inline.js
+      - name: Commit repaired candidate
+        run: |
+          git diff --check
+          if git diff --quiet -- index.html; then
+            echo 'index.html already satisfies acceptance repairs'
+            exit 0
+          fi
+          git config user.name 'Römer MPL Validation Bot'
+          git config user.email 'achilles.romer@gmail.com'
+          git add index.html
+          git commit -m 'Repair MPL browser acceptance runtime paths'
+          git push origin HEAD:mpl/pre-release-hardening-2026-08-08
