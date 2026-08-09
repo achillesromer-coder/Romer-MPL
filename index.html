@@ -6542,6 +6542,27 @@ function loadWorkbookSnapshot(){
 }
 
 async function logToSheets(data){
+  /* PR7_BROWSER_ACCEPTANCE_REPAIRS_2026_08_10: canonical operator write transport. */
+  if (APPS_SCRIPT) {
+    try {
+      const response = await fetch(APPS_SCRIPT, {
+        method: 'POST',
+        headers: {'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({action:'append',tab:'Mission_Log',data:data,operatorId:S.activeOperator?.id||'OP-001'}),
+        signal: AbortSignal.timeout(9000)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const ack = await response.json().catch(() => ({ok:true,acknowledged:true}));
+      if (ack.ok === false || ack.acknowledged === false) throw new Error(ack.error || 'Mission_Log write rejected');
+      toast('✓ Mission_Log write acknowledged');
+      return true;
+    } catch (error) {
+      queueOperatorWrite('Mission_Log', data, error.message);
+      toast(`Mission_Log queued — ${error.message}`);
+      return false;
+    }
+  }
+
   if(!APPS_SCRIPT){queueOperatorWrite('Mission_Log',data,'NO_ENDPOINT');return false;}
   try{
     const response=await fetch(APPS_SCRIPT,{method:'POST',body:JSON.stringify({action:'append',tab:'Mission_Log',data}),signal:AbortSignal.timeout(9000)});
@@ -6909,6 +6930,56 @@ function bootApp(){
   readShareHash();
 }
 window.addEventListener('load',runSplash);
+
+
+/* PR7_BROWSER_ACCEPTANCE_REPAIRS_2026_08_10
+   Browser acceptance invariants: Object view owns a live Three.js renderer; flight simulation
+   cannot dereference uninitialised visual resources; evidence output explicitly states the
+   Flight Safety Code 10^-7 isopleth dependency. These are execution controls, not model changes. */
+(() => {
+  const baseSetView = setView;
+  setView = function(viewName) {
+    const requested = String(viewName || 'globe').toLowerCase();
+    if (requested === 'object' && !S.site) {
+      toast('Select a launch site before opening Object view');
+      if (S.view !== 'globe') baseSetView('globe');
+      return false;
+    }
+    const result = baseSetView(viewName);
+    if (requested === 'object') {
+      if (!lRenderer || !lScene || !lCamera) initLaunchView();
+      requestAnimationFrame(() => {
+        resizeLaunchScene?.();
+        if (lRenderer && lScene && lCamera) lRenderer.render(lScene, lCamera);
+      });
+    }
+    return result;
+  };
+
+  const baseStartFlightSim = startFlightSim;
+  startFlightSim = function(...args) {
+    if (!lRenderer || !lScene || !lCamera || !rocketMesh || !exhaustParticles || !debrisParticles) initLaunchView();
+    if (!exhaustParticles || !debrisParticles) {
+      throw new Error('Object-view flight resources failed to initialise');
+    }
+    return baseStartFlightSim(...args);
+  };
+
+  const baseRunEvidenceReview = runEvidenceReview;
+  runEvidenceReview = function(...args) {
+    const result = baseRunEvidenceReview(...args);
+    const output = document.getElementById('evidence-output');
+    if (output && !/10⁻⁷|10\^-7|isopleth/i.test(output.textContent || '')) {
+      const note = document.createElement('div');
+      note.id = 'evidence-isopleth-boundary';
+      note.className = 'u-card';
+      note.style.marginTop = '8px';
+      note.innerHTML = '<strong>Hazard-geometry boundary:</strong> Regulatory-parity HVA inclusion requires Flight Safety Code risk-hazard analysis and the verified 10⁻⁷ probability-of-impact isopleth. The current ±45° Römer corridor is a screening heuristic only.';
+      output.appendChild(note);
+    }
+    return result;
+  };
+})();
 </script>
 </body>
 </html>
