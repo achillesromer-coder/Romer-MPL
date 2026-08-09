@@ -8,6 +8,8 @@ The repository is the executable source of truth. The canonical operational data
 
 The current runtime is intentionally identified as **PRE-RELEASE**. Semantic release numbering is not used until a controlled release is explicitly declared.
 
+The accepted executable is **430,297 bytes** with SHA-256 `494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c`. This is the exact `index.html` archived by the Chromium/WebGL acceptance workflow, not a reconstructed copy.
+
 ## Model boundary
 
 The calculation layer implements screening logic derived from the Australian Space Agency Maximum Probable Loss methodology published 1 August 2019. Outputs are decision-support artefacts, not regulator approval, permit evidence or an application-ready specialist determination.
@@ -32,7 +34,7 @@ Vehicle `IspVac_s` and `ReferenceThrust_kN` values in the workbook are explicitl
 
 `.github/workflows/mpl-pre-release-validation.yml` gates JavaScript syntax, source-contract invariants, model/runtime regression and the legacy systematic detector suite. `.github/workflows/mpl-browser-regression.yml` runs Chromium/WebGL desktop and mobile acceptance across boot, side navigation, panel state, 1 km zoom floor, Globe/Object/Orbit views, MPL phase rules, scenario overrides, a real simulated mishap path, parameter sweep, evidence review, ACHILLES batch, run history, vehicle editor, settings and acknowledged write transport.
 
-Browser receipts include the exact tested `index.html`, SHA-256, JSON diagnostics and screenshots.
+The accepted browser receipt reports **zero desktop/mobile check failures, zero page errors, zero console errors and zero request failures**. Browser receipts include the exact tested `index.html`, SHA-256, JSON diagnostics and screenshots.
 
 ## Repository boundary
 
