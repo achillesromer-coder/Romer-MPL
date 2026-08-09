@@ -2,10 +2,10 @@
   "schema": "romer.mpl.pre_release_state",
   "stage": "PRE_RELEASE",
   "semantic_versioning_enabled": false,
-  "acceptance_gate": "PENDING_FINAL_BROWSER_RETEST",
+  "acceptance_gate": "PASS",
   "executable": {
     "path": "index.html",
-    "candidate_sha256": "PENDING_EXACT_TEST_ARTIFACT_SHA256",
+    "candidate_sha256": "494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c",
     "public_surface": "https://achillesromer-coder.github.io/Romer-MPL/",
     "embed_surface": "https://romer.industries/mpl-engine"
   },
@@ -62,8 +62,15 @@
     "browser_contract": "tests/browser_globe_probe.mjs",
     "source_workflow": ".github/workflows/mpl-pre-release-validation.yml",
     "browser_workflow": ".github/workflows/mpl-browser-regression.yml",
-    "latest_known_source_model_gate": "PASS",
-    "latest_browser_repair": "OBJECT_VIEW_INITIALIZER_CORRECTED"
+    "source_model_gate": "PASS",
+    "browser_gate": "PASS",
+    "browser_run_id": 31337567525,
+    "tested_merge_ref": "44b55bac14aa20621baf2697dfd105b03b169050",
+    "tested_source_sha256": "494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c",
+    "desktop_failures": 0,
+    "mobile_failures": 0,
+    "page_errors": 0,
+    "console_errors": 0
   },
   "external_dependencies": [
     {
