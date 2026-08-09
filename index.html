@@ -1662,7 +1662,7 @@ body {
         <div id="reentry-section" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
           <div style="font-family:var(--font-sys);font-size:8px;color:var(--orange);letter-spacing:.14em;margin-bottom:6px;">RE-ENTRY DATA</div>
           <div class="orb-row"><span class="orb-key">Entry Angle</span><span class="orb-val" id="re-angle">NOT CALCULATED</span></div>
-          <div class="orb-row"><span class="orb-key">Heat Flux</span><span class="orb-val" id="re-heat">— W/cm²</span></div>
+          <div class="orb-row"><span class="orb-key">Heat Flux</span><span class="orb-val" id="re-heat">NOT CALCULATED</span></div>
           <div class="orb-row"><span class="orb-key">G-Load</span><span class="orb-val" id="re-gload">— g</span></div>
           <div class="orb-row"><span class="orb-key">Ballistic Coeff.</span><span class="orb-val" id="re-bc">— kg/m²</span></div>
           <div class="orb-row"><span class="orb-key">Comms</span><span class="orb-val" id="re-comms" style="color:var(--green);">NOMINAL</span></div>
@@ -3079,9 +3079,22 @@ let rocketMesh, exhaustParticles, debrisParticles;
 let iipTracePoints = [], iipTraceLine;
 let groundPlane, lAnimId, simInterval;
 
+function resizeLaunchScene(renderNow=false){
+  const canvas=document.getElementById('launch-canvas');
+  if(!canvas||!lRenderer||!lCamera)return false;
+  const W=Math.max(1,canvas.parentElement?.clientWidth||canvas.clientWidth||1),H=Math.max(1,canvas.parentElement?.clientHeight||canvas.clientHeight||1);
+  lRenderer.setSize(W,H,false);lCamera.aspect=W/H;lCamera.updateProjectionMatrix();
+  if(renderNow&&lScene)lRenderer.render(lScene,lCamera);
+  return W>100&&H>100;
+}
+function markObjectRenderState(state,detail=''){
+  const view=document.getElementById('launch-view');if(!view)return;
+  view.dataset.renderState=state;view.dataset.renderDetail=detail;
+}
 function initLaunchScene() {
   const canvas = document.getElementById('launch-canvas');
-  const W = canvas.parentElement.clientWidth, H = canvas.parentElement.clientHeight;
+  if(!canvas)return false;
+  const W=Math.max(1,canvas.parentElement.clientWidth), H=Math.max(1,canvas.parentElement.clientHeight);
   lRenderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
   lRenderer.setSize(W,H); lRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
   lRenderer.shadowMap.enabled = true;
@@ -3108,8 +3121,11 @@ function initLaunchScene() {
   const sun=new THREE.DirectionalLight(0xfff0e0,2); sun.position.set(80,120,60); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); lScene.add(sun);
   lScene.add(Object.assign(new THREE.DirectionalLight(0x224466,0.5),{position:{set:()=>{}}}));
   const fill=new THREE.DirectionalLight(0x224466,0.5); fill.position.set(-60,40,-60); lScene.add(fill);
-  window.addEventListener('resize',()=>{const W2=canvas.parentElement.clientWidth,H2=canvas.parentElement.clientHeight;lRenderer.setSize(W2,H2);lCamera.aspect=W2/H2;lCamera.updateProjectionMatrix();});
+  window.addEventListener('resize',()=>resizeLaunchScene(false));
+  lRenderer.render(lScene,lCamera);
+  markObjectRenderState(W>100&&H>100?'READY':'DEGRADED',`${W}x${H}`);
   animateLaunch();
+  return true;
 }
 
 function buildLaunchPad() {
@@ -5343,6 +5359,10 @@ function showSatPopup(userData, e) {
   pop.style.top  = Math.max(60, e.clientY - 60) + 'px';
   S.hovSat = userData;
 }
+function hideSatPopup(){
+  document.getElementById('sat-popup')?.classList.remove('on');
+  S.hovSat=null;
+}
 
 /* ─── Globe Animation — ECI-correct satellite framing ─── */
 // Earth sidereal rate: 360° per 86164.1s ≈ 0.00417° per second
@@ -6467,7 +6487,15 @@ function buildCloudLayer() {
    BC-011: EXTENDED KEYBOARD SHORTCUTS
 ════════════════════════════════════════════════════════ */
 
-function setView(requestedView){const allowed=new Set(['globe','object','orbit']);let v=allowed.has(requestedView)?requestedView:'globe';if(v==='object'&&!S.site){v='globe';toast('Select a launch site before opening Object view.');}S.view=v;[['vbtn-g','globe'],['vbtn-o','object'],['vbtn-orbit','orbit']].forEach(([id,name])=>{const el=document.getElementById(id);if(el){const active=v===name;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));}});const lv=document.getElementById('launch-view'),ov=document.getElementById('orbit-view');if(ov)ov.style.display=v==='orbit'?'':'none';if(v==='orbit'){lv?.classList.remove('show');if(lv)lv.style.display='none';requestAnimationFrame(()=>requestAnimationFrame(renderOrbitView));return;}if(v==='object'){if(lv){lv.style.display='flex';requestAnimationFrame(()=>lv.classList.add('show'));}requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!lRenderer)initLaunchScene();setTimeout(ensureCorridorOverlay,300);}));return;}lv?.classList.remove('show');if(lv)lv.style.display='none';document.getElementById('mpl-results')?.classList.remove('show');const mr=document.getElementById('mpl-results');if(mr)mr.style.display='none';document.getElementById('iip-globe-marker')?.classList.remove('show');requestAnimationFrame(resizeGlobe);}
+function setView(requestedView){const allowed=new Set(['globe','object','orbit']);let v=allowed.has(requestedView)?requestedView:'globe';if(v==='object'&&!S.site){v='globe';toast('Select a launch site before opening Object view.');}S.view=v;[['vbtn-g','globe'],['vbtn-o','object'],['vbtn-orbit','orbit']].forEach(([id,name])=>{const el=document.getElementById(id);if(el){const active=v===name;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));}});const lv=document.getElementById('launch-view'),ov=document.getElementById('orbit-view');if(ov)ov.style.display=v==='orbit'?'':'none';if(v==='orbit'){lv?.classList.remove('show');if(lv)lv.style.display='none';requestAnimationFrame(()=>requestAnimationFrame(renderOrbitView));return;}if(v==='object'){
+    if(lv){lv.style.display='flex';lv.classList.add('show');markObjectRenderState('INITIALIZING');}
+    try{
+      if(!lRenderer)initLaunchScene(); else resizeLaunchScene(true);
+      markObjectRenderState(lRenderer&&lScene&&lCamera?'READY':'DEGRADED',lRenderer?'renderer-active':'renderer-missing');
+      requestAnimationFrame(()=>{resizeLaunchScene(true);ensureCorridorOverlay();});
+    }catch(error){markObjectRenderState('ERROR',error?.message||String(error));console.error('[MPL object view]',error);toast('Object view renderer unavailable');}
+    return;
+  }lv?.classList.remove('show');if(lv)lv.style.display='none';document.getElementById('mpl-results')?.classList.remove('show');const mr=document.getElementById('mpl-results');if(mr)mr.style.display='none';document.getElementById('iip-globe-marker')?.classList.remove('show');requestAnimationFrame(resizeGlobe);}
 
 /* ══ ORBIT VIEW ENGINE — deterministic mechanics and plotting state ══ */
 let orbitPlotMode = 'groundtrack';
