@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
+# Idempotent migration: this file is safe to run repeatedly on the controlled pre-release branch.
 path=Path('index.html')
 source=path.read_text(encoding='utf-8')
 original=source
