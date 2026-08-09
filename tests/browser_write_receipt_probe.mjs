@@ -9,13 +9,13 @@ page.on('requestfailed',r=>failures.push({url:r.url(),error:r.failure()?.errorTe
 await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
 await page.waitForFunction(()=>typeof S!=='undefined'&&document.getElementById('app')?.classList.contains('live'),null,{timeout:25000});
 
-// Prepare the same finite result state used by the public result action, then render it so the UI control is visible.
+// Prepare the same finite result state used by the public result action, then render it so the UI control is exercised.
 await page.evaluate(()=>{
   S.site=SITES[0];S.vehicle=VEHICLES[0];S.transit=TRANSITS[0];S.failModeIds=[];S.achillesRef='BW5-001';
   simData.iipLat=S.site.lat+0.1;simData.iipLon=S.site.lon+0.1;
   const result=calculateMPL({vehicle:S.vehicle,site:S.site,phase:'UPRANGE',zone:'RURAL',failModes:[],isUprange:true});
   S.lastRun={runId:'RMI-BROWSER-WRITE-001',timestamp:new Date().toISOString(),failureTime:154,result,pdfExported:false};
-  renderMPLResult(result);
+  showMPLResults(result,simData);
 });
 await page.waitForTimeout(250);
 
