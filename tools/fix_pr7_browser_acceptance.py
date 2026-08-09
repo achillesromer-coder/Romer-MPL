@@ -71,7 +71,7 @@ wrappers = f"""
     }}
     const result = baseSetView(viewName);
     if (requested === 'object') {{
-      if (!lRenderer || !lScene || !lCamera) initLaunchView();
+      if (!lRenderer || !lScene || !lCamera) initLaunchScene();
       requestAnimationFrame(() => {{
         resizeLaunchScene?.();
         if (lRenderer && lScene && lCamera) lRenderer.render(lScene, lCamera);
@@ -82,7 +82,7 @@ wrappers = f"""
 
   const baseStartFlightSim = startFlightSim;
   startFlightSim = function(...args) {{
-    if (!lRenderer || !lScene || !lCamera || !rocketMesh || !exhaustParticles || !debrisParticles) initLaunchView();
+    if (!lRenderer || !lScene || !lCamera || !rocketMesh || !exhaustParticles || !debrisParticles) initLaunchScene();
     if (!exhaustParticles || !debrisParticles) {{
       throw new Error('Object-view flight resources failed to initialise');
     }}
