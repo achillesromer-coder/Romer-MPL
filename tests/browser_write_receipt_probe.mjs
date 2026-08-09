@@ -9,15 +9,19 @@ page.on('requestfailed',r=>failures.push({url:r.url(),error:r.failure()?.errorTe
 await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
 await page.waitForFunction(()=>typeof S!=='undefined'&&document.getElementById('app')?.classList.contains('live'),null,{timeout:25000});
 
+// Prepare the same finite result state used by the public result action, then render it so the UI control is visible.
 await page.evaluate(()=>{
   S.site=SITES[0];S.vehicle=VEHICLES[0];S.transit=TRANSITS[0];S.failModeIds=[];S.achillesRef='BW5-001';
   simData.iipLat=S.site.lat+0.1;simData.iipLon=S.site.lon+0.1;
   const result=calculateMPL({vehicle:S.vehicle,site:S.site,phase:'UPRANGE',zone:'RURAL',failModes:[],isUprange:true});
   S.lastRun={runId:'RMI-BROWSER-WRITE-001',timestamp:new Date().toISOString(),failureTime:154,result,pdfExported:false};
-  document.getElementById('mpl-results').style.display='flex';
+  renderMPLResult(result);
 });
+await page.waitForTimeout(250);
 
-await page.getByRole('button',{name:'Prepare Workbook Write',exact:true}).click({timeout:6000});
+const button=page.getByRole('button',{name:'Prepare Workbook Write',exact:true}).first();
+if(await button.count()!==1)throw new Error('Prepare Workbook Write control missing from rendered result surface');
+await button.click({timeout:6000});
 await page.waitForTimeout(150);
 const receipt=await page.evaluate(()=>({
   state:S.lastWriteReceipt?.state,
