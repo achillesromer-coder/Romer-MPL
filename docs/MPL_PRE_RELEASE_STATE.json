@@ -2,9 +2,10 @@
   "schema": "romer.mpl.pre_release_state",
   "stage": "PRE_RELEASE",
   "semantic_versioning_enabled": false,
+  "acceptance_gate": "PENDING_FINAL_BROWSER_RETEST",
   "executable": {
     "path": "index.html",
-    "candidate_sha256": "8321f8b0a3dcf877fbf25cfbe5d98b6b2aa25e61709dd487c5e610a0885715df",
+    "candidate_sha256": "PENDING_EXACT_TEST_ARTIFACT_SHA256",
     "public_surface": "https://achillesromer-coder.github.io/Romer-MPL/",
     "embed_surface": "https://romer.industries/mpl-engine"
   },
@@ -60,7 +61,9 @@
     "model_runtime_contract": "tests/mpl_runtime_smoke.js",
     "browser_contract": "tests/browser_globe_probe.mjs",
     "source_workflow": ".github/workflows/mpl-pre-release-validation.yml",
-    "browser_workflow": ".github/workflows/mpl-browser-regression.yml"
+    "browser_workflow": ".github/workflows/mpl-browser-regression.yml",
+    "latest_known_source_model_gate": "PASS",
+    "latest_browser_repair": "OBJECT_VIEW_INITIALIZER_CORRECTED"
   },
   "external_dependencies": [
     {
