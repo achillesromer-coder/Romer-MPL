@@ -35,17 +35,18 @@ check('close-surface protrusions suppressed',floor.atmo===false&&floor.markersVi
 check('floor labelled for operator',/ALT 1\.0 km.*FLOOR/.test(floor.label),floor);
 await page.evaluate(()=>resetGlobe());
 
-// Prepare a real mission state, then require actual Three.js object-view draw activity.
+// Prepare a real mission state using the same step renderer that the public UI uses.
 await page.evaluate(()=>{
-  S.site=SITES[0];S.vehicle=VEHICLES[0];S.transit=TRANSITS[0];S.failModeIds=[];S.step=2;
-  renderSites();renderStep2();setView('object');
+  S.site=SITES[0];S.vehicle=VEHICLES[0];S.transit=TRANSITS[0];S.failModeIds=[];
+  renderSites();goStep(2);setView('object');
 });
-await page.waitForTimeout(900);
+await page.waitForFunction(()=>document.getElementById('launch-view')?.dataset.renderState==='READY',null,{timeout:6000});
 const objectView=await page.evaluate(()=>({
   view:S.view,renderer:typeof lRenderer,drawCalls:lRenderer?.info?.render?.calls??0,triangles:lRenderer?.info?.render?.triangles??0,
+  renderState:document.getElementById('launch-view')?.dataset.renderState,renderDetail:document.getElementById('launch-view')?.dataset.renderDetail,
   canvas:(()=>{const r=document.getElementById('launch-canvas').getBoundingClientRect();return{w:r.width,h:r.height};})(),display:getComputedStyle(document.getElementById('launch-view')).display
 }));
-check('object view actively renders',objectView.view==='object'&&objectView.renderer==='object'&&objectView.drawCalls>0&&objectView.canvas.w>100&&objectView.canvas.h>100&&objectView.display!=='none',objectView);
+check('object view actively renders',objectView.view==='object'&&objectView.renderer==='object'&&objectView.drawCalls>0&&objectView.canvas.w>100&&objectView.canvas.h>100&&objectView.display!=='none'&&objectView.renderState==='READY',objectView);
 
 // Run the actual simulation fast enough to produce valid orbital state, then force the failure/result path.
 await page.evaluate(()=>{startFlightSim();setSimSpeed(8);});
@@ -56,7 +57,7 @@ await page.evaluate(()=>triggerFailureEvent());
 await page.waitForFunction(()=>S.simRunning===false&&Number.isFinite(S.lastRun?.result?.MPL_TOTAL),null,{timeout:8000});
 
 // Orbit view must draw and populate orbital data; a visible empty shell is a soft-break failure.
-await page.evaluate(()=>{setView('orbit');renderOrbitView();});
+await page.evaluate(()=>setView('orbit'));
 await page.waitForTimeout(350);
 const orbit=await page.evaluate(()=>({
   view:S.view,display:getComputedStyle(document.getElementById('orbit-view')).display,nodata:getComputedStyle(document.getElementById('orbit-nodata')).display,
