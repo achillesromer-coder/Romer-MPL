@@ -1,0 +1,64 @@
+name: MPL Pre-release Validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-model-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: JavaScript syntax gate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          source=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',source,re.S)
+          assert scripts, 'inline application script missing'
+          Path('/tmp/mpl-inline.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/mpl-inline.js
+      - name: Pre-release source contract
+        run: python tests/pre_release_static_audit.py index.html
+      - name: MPL runtime contract
+        run: node tests/mpl_runtime_smoke.js index.html
+      - name: Detector regression suite
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Legacy systematic audit
+        run: |
+          python tools/mpl_static_audit.py index.html --output /tmp/mpl-systematic-audit.json
+          python - <<'PY'
+          import json
+          receipt=json.load(open('/tmp/mpl-systematic-audit.json'))
+          blockers=[f for f in receipt.get('findings',[]) if f.get('severity') in ('CRITICAL','HIGH') and f.get('state') in ('FAIL','REVIEW_REQUIRED')]
+          print(json.dumps({
+            'sha256':receipt.get('sha256'),'release_gate':receipt.get('release_gate'),
+            'finding_count':receipt.get('finding_count'),'severity_counts':receipt.get('severity_counts'),
+            'blockers':blockers
+          },indent=2))
+          if blockers: raise SystemExit('blocking systematic-audit findings remain')
+          PY
+      - name: Archive validation receipts
+        if: always()
+        run: |
+          mkdir -p artifacts/pre-release-validation
+          python tests/pre_release_static_audit.py index.html > artifacts/pre-release-validation/static-contract.json || true
+          node tests/mpl_runtime_smoke.js index.html > artifacts/pre-release-validation/runtime-contract.json || true
+          cp /tmp/mpl-systematic-audit.json artifacts/pre-release-validation/systematic-audit.json 2>/dev/null || true
+          sha256sum index.html > artifacts/pre-release-validation/index.sha256
+      - name: Upload validation receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpl-pre-release-validation-${{ github.sha }}
+          path: artifacts/pre-release-validation
+          if-no-files-found: error
+          retention-days: 30

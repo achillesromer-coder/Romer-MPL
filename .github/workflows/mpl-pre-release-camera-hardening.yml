@@ -1,0 +1,52 @@
+name: MPL pre-release camera hardening
+
+on:
+  push:
+    branches:
+      - mpl/pre-release-hardening-2026-08-08
+    paths:
+      - tools/harden_pre_release_camera.py
+      - .github/workflows/mpl-pre-release-camera-hardening.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: mpl/pre-release-hardening-2026-08-08
+          fetch-depth: 0
+
+      - name: Apply deterministic camera hardening
+        run: python3 tools/harden_pre_release_camera.py
+
+      - name: Validate inline JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          source=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',source,re.S|re.I)
+          Path('/tmp/mpl-inline.js').write_text('\n'.join(b for b in blocks if b.strip()),encoding='utf-8')
+          PY
+          node --check /tmp/mpl-inline.js
+
+      - name: Run pre-release source audit
+        run: python3 tests/pre_release_static_audit.py index.html
+
+      - name: Commit transformed runtime and browser acceptance test
+        run: |
+          if git diff --quiet -- index.html tests/browser_globe_probe.mjs; then
+            echo 'Camera hardening already applied; no commit required.'
+            exit 0
+          fi
+          git config user.name 'Römer MPL automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html tests/browser_globe_probe.mjs
+          git commit -m 'Harden pre-release globe camera and touch zoom'
+          git push origin HEAD:mpl/pre-release-hardening-2026-08-08
