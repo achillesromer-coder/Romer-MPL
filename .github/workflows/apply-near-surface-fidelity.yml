@@ -5,6 +5,7 @@ on:
     branches: [mpl/near-surface-fidelity]
     paths:
       - tools/apply_near_surface_fidelity.py
+      - .github/workflows/apply-near-surface-fidelity.yml
   workflow_dispatch:
 
 permissions:
