@@ -67,14 +67,17 @@ const exit=await page.evaluate(()=>{setCameraAltitudeKm(400);return {state:nearS
 if(exit.state!=='STANDBY'||exit.visible!==false) throw new Error(`near-surface patch did not exit cleanly: ${JSON.stringify(exit)}`);
 
 failGibs=true;
+const consoleBeforeOutage=consoleErrors.length;
 const fallback=await page.evaluate(async()=>{
   setCameraAltitudeKm(1);clearTimeout(nearSurfaceRefreshTimer);nearSurfaceImageryState.status='ERROR';await requestNearSurfaceImagery(true);await new Promise(r=>setTimeout(r,120));
   return {state:nearSurfaceImageryState.status,error:nearSurfaceImageryState.error,drawCalls:renderer.info.render.calls,globeVisible:globe.visible,badge:document.getElementById('globe-hd-badge')?.textContent||''};
 });
 if(fallback.state!=='ERROR'||!fallback.globeVisible||fallback.drawCalls<1||!/CONTROLLED GLOBAL/.test(fallback.badge)) throw new Error(`GIBS outage did not preserve controlled fallback: ${JSON.stringify(fallback)}`);
-if(pageErrors.length||consoleErrors.length) throw new Error(`browser errors: ${JSON.stringify({pageErrors,consoleErrors})}`);
+const outageConsoleErrors=consoleErrors.slice(consoleBeforeOutage);
+const unexpectedConsoleErrors=consoleErrors.slice(0,consoleBeforeOutage).concat(outageConsoleErrors.filter(e=>!/Failed to load resource:.*503.*Service Unavailable/i.test(e)));
+if(pageErrors.length||unexpectedConsoleErrors.length) throw new Error(`browser errors: ${JSON.stringify({pageErrors,unexpectedConsoleErrors,consoleErrors})}`);
 
-const summary={ready,request:req.toString(),exit,fallback,pageErrors,consoleErrors};
+const summary={ready,request:req.toString(),exit,fallback,pageErrors,consoleErrors,expectedOutageConsoleErrors:outageConsoleErrors,unexpectedConsoleErrors};
 fs.writeFileSync(path.join(outDir,'near-surface-summary.json'),JSON.stringify(summary,null,2));
 console.log(JSON.stringify(summary,null,2));
 await context.close();
