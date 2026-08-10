@@ -5,8 +5,10 @@
   "acceptance_gate": "PASS",
   "executable": {
     "path": "index.html",
-    "candidate_sha256": "494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c",
-    "size_bytes": 430297,
+    "candidate_sha256": "1e9538e028eb00d6af87452f416189c04c27e49e891034d993c1e22916e13753",
+    "git_blob_sha": "3cfd66f2fb0ea3bc4c882d06bdf00ef451975fd1",
+    "size_bytes": 440306,
+    "merge_commit": "86a500685f435e3dc3407391d13021c273daa1b7",
     "public_surface": "https://achillesromer-coder.github.io/Romer-MPL/",
     "embed_surface": "https://romer.industries/mpl-engine"
   },
@@ -24,7 +26,15 @@
       "operators": 4,
       "bridge_targets": 2,
       "gdp_records": 154
-    }
+    },
+    "provenance_receipts": ["CL-023", "AUD-012"]
+  },
+  "controlled_drive_mirror": {
+    "file_id": "11no0F0hjEHdBXTiqyzNOvuwZZDoygrmf",
+    "title": "romer_mpl_PRE_RELEASE.html",
+    "sha256": "1e9538e028eb00d6af87452f416189c04c27e49e891034d993c1e22916e13753",
+    "size_bytes": 440306,
+    "pre_near_surface_backup_id": "1wqyfUSSZnTsdqxYh8wwx5e97BLrd10Vw"
   },
   "currency": {
     "composite": "AUD",
@@ -40,7 +50,23 @@
     "maximum_camera_altitude_km": 40000,
     "default_camera_altitude_km": 10000,
     "site_focus_altitude_km": 180,
-    "surface_overlay_max_altitude_km": 0.18
+    "surface_overlay_max_altitude_km": 0.18,
+    "near_surface_imagery": {
+      "mode": "ADAPTIVE_CURVED_LOCAL_LOD",
+      "entry_altitude_km": 300,
+      "exit_altitude_km": 360,
+      "imagery_shell_altitude_km": 0.012,
+      "source": "NASA_GIBS_BLUEMARBLE_NEXTGENERATION",
+      "source_resolution_m": 500,
+      "service": "WMS_1_3_0_EPSG4326",
+      "request_pixels_at_or_below_50_km": 2048,
+      "visual_context_only": true,
+      "mpl_model_dependency": false,
+      "regulatory_evidence": false,
+      "fallback": "CONTROLLED_NATURAL_EARTH_GLOBAL",
+      "fallback_state_text": "LOCAL DETAIL UNAVAILABLE · CONTROLLED GLOBAL"
+    },
+    "mobile_pinch_uses_physical_altitude_clamp": true
   },
   "regulatory_boundary": {
     "methodology_publication_date": "2019-08-01",
@@ -48,31 +74,51 @@
     "hva_screening_method": "ROMER_SCREENING_HEURISTIC",
     "hva_regulatory_inclusion": false,
     "application_ready": false,
-    "independent_specialist_review_required": true
+    "independent_specialist_review_required": true,
+    "cartographic_imagery_is_hazard_geometry": false
   },
   "runtime_boundaries": {
     "public_read_path": "EMBEDDED_CONTROLLED_SNAPSHOT",
     "operator_write_path": "ACKNOWLEDGED_APPS_SCRIPT_POST",
     "live_tle": "OPTIONAL_VISUAL_ENRICHMENT_ONLY",
     "fabricated_tle_fallback": false,
+    "near_surface_external_imagery": "OPTIONAL_VISUAL_ENRICHMENT_WITH_CONTROLLED_FALLBACK",
     "n3_raphael_in_mpl_runtime": false
   },
   "validation": {
     "source_contract": "tests/pre_release_static_audit.py",
     "model_runtime_contract": "tests/mpl_runtime_smoke.js",
     "browser_contract": "tests/browser_globe_probe.mjs",
+    "near_surface_contract": "tests/near_surface_lod_probe.mjs",
     "source_workflow": ".github/workflows/mpl-pre-release-validation.yml",
     "browser_workflow": ".github/workflows/mpl-browser-regression.yml",
     "source_model_gate": "PASS",
     "browser_gate": "PASS",
-    "source_model_run_id": 31337807344,
-    "browser_run_id": 31337807323,
-    "tested_source_sha256": "494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c",
+    "near_surface_gate": "PASS",
+    "source_model_run_id": 31353218070,
+    "browser_run_id": 31353218107,
+    "tested_source_sha256": "1e9538e028eb00d6af87452f416189c04c27e49e891034d993c1e22916e13753",
     "desktop_failures": 0,
     "mobile_failures": 0,
     "page_errors": 0,
-    "console_errors": 0,
-    "request_failures": 0
+    "unexpected_console_errors": 0,
+    "request_failures": 0,
+    "near_surface_receipt": {
+      "requested_altitude_km": 1,
+      "measured_radial_altitude_km": 0.9999999999987226,
+      "lod_status": "READY",
+      "lod_patch_visible": true,
+      "lod_patch_parent": "GLOBE",
+      "source": "NASA_GIBS_BLUEMARBLE_NEXTGENERATION",
+      "source_resolution_m": 500,
+      "request_pixels": 2048,
+      "imagery_span_deg": 2.5986356485064017,
+      "exit_test_altitude_km": 400,
+      "exit_state": "STANDBY",
+      "forced_outage_http_status": 503,
+      "forced_outage_fallback_globe_visible": true,
+      "forced_outage_unexpected_console_errors": 0
+    }
   },
   "external_dependencies": [
     {
