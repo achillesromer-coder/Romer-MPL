@@ -25,11 +25,13 @@ jobs:
           cat /tmp/mpl-http.log
           exit 1
       - name: Probe desktop and mobile execution paths
-        id: probe
-        continue-on-error: true
         env:
           CANDIDATE_URL: http://127.0.0.1:4173/index.html
         run: node tests/browser_globe_probe.mjs
+      - name: Probe 1 km near-surface fidelity and controlled fallback
+        env:
+          CANDIDATE_URL: http://127.0.0.1:4173/index.html
+        run: node tests/near_surface_lod_probe.mjs
       - name: Archive exact tested source and browser receipts
         if: always()
         run: |
@@ -44,9 +46,3 @@ jobs:
           path: artifacts/browser-mpl
           if-no-files-found: error
           retention-days: 30
-      - name: Enforce browser regression gate
-        if: steps.probe.outcome != 'success'
-        run: |
-          echo 'MPL desktop/mobile runtime regression detected.' >&2
-          cat artifacts/browser-mpl/summary.json || true
-          exit 1
