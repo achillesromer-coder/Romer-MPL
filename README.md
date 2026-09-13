@@ -8,7 +8,7 @@ The repository is the executable source of truth. The canonical operational data
 
 The current runtime is intentionally identified as **PRE-RELEASE**. Semantic release numbering is not used until a controlled release is explicitly declared.
 
-The accepted executable is **430,297 bytes** with SHA-256 `494090da38d50c0effe033353e326184bd3a2d2f3a5d1fd632c40d3fb573d19c`. This is the exact `index.html` archived by the Chromium/WebGL acceptance workflow, not a reconstructed copy.
+Executable size, SHA-256, accepted workbook-snapshot hash, browser receipt IDs and release-gate state are intentionally **not duplicated in this README**. Their machine-readable authority is `docs/MPL_PRE_RELEASE_STATE.json`; validation workflows archive source-bound receipts for each accepted run. This avoids stale documentation presenting an older executable as current authority.
 
 ## Model boundary
 
@@ -32,9 +32,11 @@ Vehicle `IspVac_s` and `ReferenceThrust_kN` values in the workbook are explicitl
 
 ## Validation
 
-`.github/workflows/mpl-pre-release-validation.yml` gates JavaScript syntax, source-contract invariants, model/runtime regression and the legacy systematic detector suite. `.github/workflows/mpl-browser-regression.yml` runs Chromium/WebGL desktop and mobile acceptance across boot, side navigation, panel state, 1 km zoom floor, Globe/Object/Orbit views, MPL phase rules, scenario overrides, a real simulated mishap path, parameter sweep, evidence review, ACHILLES batch, run history, vehicle editor, settings and acknowledged write transport.
+`.github/workflows/mpl-pre-release-validation.yml` gates JavaScript syntax, source-contract invariants, the dedicated UI/fidelity static audit, model/runtime regression and the legacy systematic detector suite. `.github/workflows/mpl-browser-regression.yml` runs Chromium/WebGL desktop and mobile acceptance across boot, side navigation, panel state, 1 km zoom floor, Globe/Object/Orbit views, MPL phase rules, scenario overrides, a real simulated mishap path, parameter sweep, evidence review, ACHILLES batch, run history, vehicle editor, settings and acknowledged write transport.
 
-The accepted browser receipt reports **zero desktop/mobile check failures, zero page errors, zero console errors and zero request failures**. Browser receipts include the exact tested `index.html`, SHA-256, JSON diagnostics and screenshots.
+The UI/fidelity audit records hard interface contracts separately from advisory refinement opportunities and preserves four boundaries: `STATIC_UI_PASS != BROWSER_PROVIDER_READBACK`, `CI_PASS != EMPIRICAL_VALIDATION`, `UI_FIDELITY != SCIENTIFIC_FIDELITY`, and `PRE_RELEASE != PUBLICLY_RELEASED`.
+
+The last accepted browser receipt and exact tested-source identity are held in `docs/MPL_PRE_RELEASE_STATE.json`. A historical PASS remains historical evidence only; subsequent source changes require their own current receipt before release-state promotion.
 
 ## Repository boundary
 
