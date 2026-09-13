@@ -28,6 +28,8 @@ jobs:
           node --check /tmp/mpl-inline.js
       - name: Pre-release source contract
         run: python tests/pre_release_static_audit.py index.html
+      - name: UI / fidelity static audit
+        run: python tests/ui_fidelity_static_audit.py index.html
       - name: MPL runtime contract
         run: node tests/mpl_runtime_smoke.js index.html
       - name: Detector regression suite
@@ -51,6 +53,7 @@ jobs:
         run: |
           mkdir -p artifacts/pre-release-validation
           python tests/pre_release_static_audit.py index.html > artifacts/pre-release-validation/static-contract.json || true
+          python tests/ui_fidelity_static_audit.py index.html > artifacts/pre-release-validation/ui-fidelity-audit.json || true
           node tests/mpl_runtime_smoke.js index.html > artifacts/pre-release-validation/runtime-contract.json || true
           cp /tmp/mpl-systematic-audit.json artifacts/pre-release-validation/systematic-audit.json 2>/dev/null || true
           sha256sum index.html > artifacts/pre-release-validation/index.sha256
